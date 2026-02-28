@@ -19,11 +19,7 @@ type Props = {
   onBorrow: (id: number) => void;
 };
 
-export function MobileInventoryCards({
-  items,
-  borrowingId,
-  onBorrow,
-}: Props) {
+export function MobileInventoryCards({ items, borrowingId, onBorrow }: Props) {
   return (
     <Stack gap="md">
       {items.map((item, index) => {
@@ -31,16 +27,11 @@ export function MobileInventoryCards({
           item.quantity_available === 0 || item.status !== "WORKING";
 
         const lowStock =
-          item.quantity_available > 0 && item.quantity_available <= 3;
+          item.quantity_available > 0 &&
+          item.quantity_available <= item.quantity_total * 0.2;
 
         return (
-          <Card
-            key={item.id}
-            radius="xl"
-            shadow="xs"
-            withBorder
-            p="lg"
-          >
+          <Card key={item.id} radius="xl" shadow="xs" withBorder p="lg">
             {/* Header */}
             <Group justify="space-between" align="flex-start" mb="xs">
               <Box>
@@ -59,10 +50,10 @@ export function MobileInventoryCards({
                   item.status === "WORKING"
                     ? "green"
                     : item.status === "NEEDS_TESTING"
-                    ? "yellow"
-                    : item.status === "FAULTY"
-                    ? "red"
-                    : "gray"
+                      ? "yellow"
+                      : item.status === "FAULTY"
+                        ? "red"
+                        : "gray"
                 }
               >
                 {item.status}

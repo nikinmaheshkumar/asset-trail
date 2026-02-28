@@ -14,6 +14,8 @@ import {
   SimpleGrid,
   Group,
   Button,
+  Pagination,
+  Divider,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -35,11 +37,15 @@ export function InventoryTable() {
   const [loading, setLoading] = useState(true);
   const [borrowingId, setBorrowingId] = useState<number | null>(null);
 
-  // 🔎 FILTER STATES
+  // FILTER STATES
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [lowStockOnly, setLowStockOnly] = useState(false);
+
+  // PAGINATION
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 8;
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -97,7 +103,7 @@ export function InventoryTable() {
     }
   }
 
-  // 🔥 FILTER LOGIC
+  // 🔥 UPDATED 20% LOW STOCK LOGIC
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const matchesSearch = item.name
@@ -108,17 +114,42 @@ export function InventoryTable() {
         ? item.category === categoryFilter
         : true;
 
-      const matchesStatus = statusFilter ? item.status === statusFilter : true;
+      const matchesStatus = statusFilter
+        ? item.status === statusFilter
+        : true;
 
       const matchesLowStock = lowStockOnly
-        ? item.quantity_available > 0 && item.quantity_available <= 3
+        ? item.quantity_available > 0 &&
+          item.quantity_available <= item.quantity_total * 0.2
         : true;
 
       return (
-        matchesSearch && matchesCategory && matchesStatus && matchesLowStock
+        matchesSearch &&
+        matchesCategory &&
+        matchesStatus &&
+        matchesLowStock
       );
     });
   }, [items, search, categoryFilter, statusFilter, lowStockOnly]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter, statusFilter, lowStockOnly]);
+
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+
+  const paginatedItems = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filteredItems.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredItems, page]);
+
+  const startItem =
+    filteredItems.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1;
+
+  const endItem = Math.min(
+    page * ITEMS_PER_PAGE,
+    filteredItems.length
+  );
 
   const handleReset = () => {
     setSearch("");
@@ -135,125 +166,126 @@ export function InventoryTable() {
     );
   }
 
-  if (items.length === 0) {
-    return (
-      <Center py="xl">
-        <Text c="dimmed">No items found</Text>
-      </Center>
-    );
-  }
-
   const categories = [...new Set(items.map((i) => i.category))];
   const statuses = [...new Set(items.map((i) => i.status))];
 
   return (
     <Stack gap="xl">
-      {/* ===== FILTER PANEL ===== */}
-      <Paper
-  withBorder
-  radius="md"
-  p="md"
-  shadow="xs"
->
-  {/* Header */}
-  <Group justify="space-between" align="center" mb="md">
-    <Title order={5} fw={800}>
-      Filters
-    </Title>
+      {/* FILTER PANEL */}
+      <Paper withBorder radius="md" p="md" shadow="xs">
+        <Group justify="space-between" mb="md">
+          <Title order={5} fw={800}>
+            Filters
+          </Title>
 
-    <Button
-      variant="filled"
-      size="sm"
-      fw={600}
-      leftSection={<IconRefresh size={16} />}
-      onClick={handleReset}
-    >
-      Reset
-    </Button>
-  </Group>
+          <Button
+            variant="filled"
+            size="sm"
+            leftSection={<IconRefresh size={16} />}
+            onClick={handleReset}
+          >
+            Reset
+          </Button>
+        </Group>
 
-  {/* Filters Grid */}
-  <SimpleGrid
-    cols={{ base: 1, sm: 2, md: 4 }}
-    spacing="md"
-  >
-    <TextInput
-      label="Search"
-      placeholder="Search item..."
-      leftSection={<IconSearch size={16} />}
-      size="md"
-      styles={{
-        input: { borderWidth: 2 },
-        label: { fontWeight: 600 },
-      }}
-      value={search}
-      onChange={(e) => setSearch(e.currentTarget.value)}
-    />
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
+          <TextInput
+            label="Search"
+            placeholder="Search item..."
+            leftSection={<IconSearch size={16} />}
+            size="sm"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
 
-    <Select
-      label="Category"
-      placeholder="All"
-      data={categories}
-      size="md"
-      styles={{
-        input: { borderWidth: 2 },
-        label: { fontWeight: 600 },
-      }}
-      value={categoryFilter}
-      onChange={setCategoryFilter}
-      clearable
-    />
+          <Select
+            label="Category"
+            placeholder="All"
+            data={categories}
+            size="sm"
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            clearable
+          />
 
-    <Select
-      label="Status"
-      placeholder="All"
-      data={statuses}
-      size="md"
-      styles={{
-        input: { borderWidth: 2 },
-        label: { fontWeight: 600 },
-      }}
-      value={statusFilter}
-      onChange={setStatusFilter}
-      clearable
-    />
+          <Select
+            label="Status"
+            placeholder="All"
+            data={statuses}
+            size="sm"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            clearable
+          />
 
-    <Stack gap={4} justify="flex-end">
-      <Text size="md" fw={600}>
-        Stock
-      </Text>
+          <Group align="end">
+            <Switch
+              label="Low stock only"
+              checked={lowStockOnly}
+              onChange={(e) => setLowStockOnly(e.currentTarget.checked)}
+            />
+          </Group>
+        </SimpleGrid>
+      </Paper>
 
-      <Group align="center">
-        <Switch
-          size="md"
-          checked={lowStockOnly}
-          onChange={(e) => setLowStockOnly(e.currentTarget.checked)}
-        />
-        <Text size="sm" fw={500}>
-          Low stock only
-        </Text>
-      </Group>
-    </Stack>
-  </SimpleGrid>
-</Paper>
-
-      {/* ===== TABLE / CARDS ===== */}
-      {filteredItems.length === 0 ? (
+      {/* TABLE OR CARDS */}
+      {paginatedItems.length === 0 ? (
         <Center py="lg">
           <Text c="dimmed">No matching results</Text>
         </Center>
       ) : isMobile ? (
         <MobileInventoryCards
-          items={filteredItems}
+          items={paginatedItems}
           borrowingId={borrowingId}
           onBorrow={handleBorrow}
         />
       ) : (
         <DesktopInventoryTable
-          items={filteredItems}
+          items={paginatedItems}
           borrowingId={borrowingId}
           onBorrow={handleBorrow}
         />
+      )}
+
+      {/* PAGINATION CONTROLS */}
+      {totalPages > 1 && (
+        <>
+          <Divider />
+          <Group justify="space-between" align="center">
+            <Text size="sm" fw={500}>
+              Showing {startItem}-{endItem} of {filteredItems.length}
+            </Text>
+
+            <Group gap="xs" align="center">
+              <Button
+                size="sm"
+                variant="default"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
+                Prev
+              </Button>
+
+              <Pagination
+                value={page}
+                onChange={setPage}
+                total={totalPages}
+                size="md"
+                radius="md"
+                withControls={false}
+              />
+
+              <Button
+                size="sm"
+                variant="default"
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </Group>
+          </Group>
+        </>
       )}
     </Stack>
   );

@@ -25,11 +25,7 @@ type Props = {
   onBorrow: (id: number) => void;
 };
 
-export function DesktopInventoryTable({
-  items,
-  borrowingId,
-  onBorrow,
-}: Props) {
+export function DesktopInventoryTable({ items, borrowingId, onBorrow }: Props) {
   return (
     <ScrollArea>
       <Table
@@ -44,8 +40,7 @@ export function DesktopInventoryTable({
             <Table.Th>
               <Group gap={6}>
                 <IconHash size={18} />
-                <Text fw={800} size="md">
-                </Text>
+                <Text fw={800} size="md"></Text>
               </Group>
             </Table.Th>
 
@@ -104,7 +99,7 @@ export function DesktopInventoryTable({
 
             const lowStock =
               item.quantity_available > 0 &&
-              item.quantity_available <= 3;
+              item.quantity_available <= item.quantity_total * 0.2;
 
             return (
               <Table.Tr key={item.id}>
@@ -137,8 +132,8 @@ export function DesktopInventoryTable({
                         lowStock
                           ? "red"
                           : item.quantity_available === 0
-                          ? "gray"
-                          : undefined
+                            ? "gray"
+                            : undefined
                       }
                     >
                       {item.quantity_available}
@@ -149,12 +144,7 @@ export function DesktopInventoryTable({
                     </Text>
 
                     {lowStock && (
-                      <Badge
-                        size="sm"
-                        color="red"
-                        variant="light"
-                        radius="xl"
-                      >
+                      <Badge size="sm" color="red" variant="light" radius="xl">
                         Low
                       </Badge>
                     )}
@@ -171,10 +161,10 @@ export function DesktopInventoryTable({
                       item.status === "WORKING"
                         ? "green"
                         : item.status === "NEEDS_TESTING"
-                        ? "yellow"
-                        : item.status === "FAULTY"
-                        ? "red"
-                        : "gray"
+                          ? "yellow"
+                          : item.status === "FAULTY"
+                            ? "red"
+                            : "gray"
                     }
                   >
                     {item.status}
