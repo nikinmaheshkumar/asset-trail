@@ -1,9 +1,20 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 import { AppShellLayout } from "@/components/layout/AppShellLayout";
 
-export default function ProtectedLayout({
+export const dynamic = "force-dynamic";
+
+export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/login");
+  }
+
   return <AppShellLayout>{children}</AppShellLayout>;
 }
