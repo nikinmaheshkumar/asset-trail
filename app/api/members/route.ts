@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-
+import bcrypt from "bcrypt";
 export async function GET() {
   try {
     const members = await prisma.member.findMany({
@@ -36,25 +36,39 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    const existingUser = await prisma.member.findUnique({
+      where: { email },
+    });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "User with this email already exists" },
+        { status: 409 }
+      );
+    }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
     const member = await prisma.member.create({
       data: {
         name,
         email,
-        password_hash: password, 
-        role: role ?? "MEMBER",
+        password_hash: hashedPassword,
+        role: role ?? "JUNIOR_CORE", // default role
+        mustChangePwd: false,
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        created_at: true,
       },
     });
 
     return NextResponse.json(member, { status: 201 });
+
   } catch (error) {
     console.error("Error creating member:", error);
+
     return NextResponse.json(
       { error: "Failed to create member" },
       { status: 500 }
