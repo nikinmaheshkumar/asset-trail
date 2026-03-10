@@ -39,7 +39,7 @@ export function Sidebar() {
   ];
 
   const visibleNavItems = navItems.filter((item) =>
-    item.roles.includes(userRole)
+    userRole ? item.roles.includes(userRole) : false
   );
 
   return (
