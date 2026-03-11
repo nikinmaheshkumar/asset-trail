@@ -63,7 +63,7 @@ model Loan {
   borrow_date  DateTime   @default(now())
   due_date     DateTime
   return_date  DateTime?
-  purpose      String?
+  purpose      String
   status       LoanStatus @default(BORROWED)
   damage_notes String?
   created_at   DateTime   @default(now())

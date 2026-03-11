@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
@@ -41,14 +41,14 @@ export async function GET(
     console.error("Error fetching loan:", error);
     return NextResponse.json(
       { error: "Failed to fetch loan" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PATCH(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
@@ -59,14 +59,7 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { status, damage_notes } = body;
-
-    if (!status) {
-      return NextResponse.json(
-        { error: "Status is required" },
-        { status: 400 }
-      );
-    }
+    const { damage_notes } = body;
 
     const existingLoan = await prisma.loan.findUnique({
       where: { id: loanId },
@@ -83,8 +76,8 @@ export async function PATCH(
 
     if (existingLoan.status !== "BORROWED") {
       return NextResponse.json(
-        { error: "Loan already closed" },
-        { status: 400 }
+        { error: "Loan already returned" },
+        { status: 400 },
       );
     }
 
@@ -92,28 +85,18 @@ export async function PATCH(
       const loanUpdate = await tx.loan.update({
         where: { id: loanId },
         data: {
-          status,
+          status: "RETURNED",
           return_date: new Date(),
           damage_notes: damage_notes ?? null,
         },
-        select: {
-          id: true,
-          item_id: true,
-          member_id: true,
-          status: true,
-          return_date: true,
-          damage_notes: true,
-        },
       });
 
-      if (status === "RETURNED") {
-        await tx.item.update({
-          where: { id: existingLoan.item_id },
-          data: {
-            quantity_available: { increment: 1 },
-          },
-        });
-      }
+      await tx.item.update({
+        where: { id: existingLoan.item_id },
+        data: {
+          quantity_available: { increment: 1 },
+        },
+      });
 
       return loanUpdate;
     });
@@ -123,7 +106,7 @@ export async function PATCH(
     console.error("Error updating loan:", error);
     return NextResponse.json(
       { error: "Failed to update loan" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
