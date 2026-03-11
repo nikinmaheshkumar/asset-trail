@@ -8,6 +8,7 @@ import {
   IconBox,
   IconClipboardList,
   IconLogout,
+  IconUser
 } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -36,10 +37,16 @@ export function Sidebar() {
       icon: IconClipboardList,
       roles: ["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"],
     },
+    {
+      label: "Users",
+      href: "/admin/users",
+      icon: IconUser,
+      roles: ["MASTER_ADMIN"],
+    },
   ];
 
   const visibleNavItems = navItems.filter((item) =>
-    userRole ? item.roles.includes(userRole) : false
+    userRole ? item.roles.includes(userRole) : false,
   );
 
   return (

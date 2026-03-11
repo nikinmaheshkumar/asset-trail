@@ -1,6 +1,7 @@
 "use client";
 
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider} from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { SessionProvider } from "next-auth/react";
 
@@ -46,8 +47,10 @@ export default function Providers({
           defaultRadius: "md",
         }}
       >
+        <ModalsProvider>  
         <Notifications position="top-right" />
         {children}
+        </ModalsProvider>
       </MantineProvider>
     </SessionProvider>
   );
