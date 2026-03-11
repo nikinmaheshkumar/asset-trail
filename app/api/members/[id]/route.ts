@@ -2,12 +2,22 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth";
 
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireRole(["MASTER_ADMIN"]);
+
+    if ("error" in auth) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
     const { id } = await context.params;
     const memberId = Number(id);
 
@@ -31,8 +41,10 @@ export async function GET(
     }
 
     return NextResponse.json(member);
+
   } catch (error) {
     console.error("Error fetching member:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch member" },
       { status: 500 },
@@ -45,6 +57,15 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireRole(["MASTER_ADMIN"]);
+
+    if ("error" in auth) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
     const { id } = await context.params;
     const memberId = Number(id);
 
@@ -98,8 +119,10 @@ export async function PATCH(
     });
 
     return NextResponse.json(updatedMember);
+
   } catch (error) {
     console.error("Error updating member:", error);
+
     return NextResponse.json(
       { error: "Failed to update member" },
       { status: 500 },
@@ -112,6 +135,15 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireRole(["MASTER_ADMIN"]);
+
+    if ("error" in auth) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
     const { id } = await context.params;
     const memberId = Number(id);
 
@@ -146,8 +178,10 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: "Member deleted successfully" });
+
   } catch (error) {
     console.error("Error deleting member:", error);
+
     return NextResponse.json(
       { error: "Failed to delete member" },
       { status: 500 },

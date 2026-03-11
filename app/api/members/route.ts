@@ -3,8 +3,19 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
+import { requireRole } from "@/lib/auth";
+
 export async function GET() {
   try {
+    const auth = await requireRole(["MASTER_ADMIN"]);
+
+    if ("error" in auth) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
     const members = await prisma.member.findMany({
       select: {
         id: true,
@@ -16,16 +27,28 @@ export async function GET() {
     });
 
     return NextResponse.json(members);
+
   } catch (error) {
     console.error("Error fetching members:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch members" },
       { status: 500 }
     );
   }
 }
+
 export async function POST(req: Request) {
   try {
+    const auth = await requireRole(["MASTER_ADMIN"]);
+
+    if ("error" in auth) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
     const body = await req.json();
 
     const { name, email, password, role } = body;
@@ -36,9 +59,11 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
     const existingUser = await prisma.member.findUnique({
       where: { email },
     });
+
     if (existingUser) {
       return NextResponse.json(
         { error: "User with this email already exists" },
@@ -47,13 +72,14 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const member = await prisma.member.create({
       data: {
         name,
         email,
         password_hash: hashedPassword,
-        role: role ?? "JUNIOR_CORE", // default role
-        mustChangePwd: true, // force password change on first login
+        role: role ?? "JUNIOR_CORE",
+        mustChangePwd: true,
       },
       select: {
         id: true,
