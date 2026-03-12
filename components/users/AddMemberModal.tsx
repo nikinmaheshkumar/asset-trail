@@ -129,9 +129,15 @@ export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
 
         <Select
           label="Role"
-          data={["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"]}
+          placeholder="Select role"
           value={role}
           onChange={setRole}
+          data={[
+            { value: "MASTER_ADMIN", label: "Master Admin" },
+            { value: "BOARD", label: "Board Member" },
+            { value: "SENIOR_CORE", label: "Senior Core" },
+            { value: "JUNIOR_CORE", label: "Junior Core" },
+          ]}
         />
 
         <Button loading={loading} onClick={handleSubmit}>
