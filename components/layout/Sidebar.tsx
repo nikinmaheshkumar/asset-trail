@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Stack, Text, Group, Box, Divider, Button } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Box,
+  Divider,
+  Button,
+  Avatar,
+  Badge,
+} from "@mantine/core";
 import {
   IconLayoutDashboard,
   IconBox,
   IconClipboardList,
   IconLogout,
-  IconUser
+  IconUser,
 } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -46,8 +55,22 @@ export function Sidebar() {
   ];
 
   const visibleNavItems = navItems.filter((item) =>
-    userRole ? item.roles.includes(userRole) : false,
+    userRole ? item.roles.includes(userRole) : false
   );
+
+  const roleLabels: Record<string, string> = {
+    MASTER_ADMIN: "Master Admin",
+    BOARD: "Board",
+    SENIOR_CORE: "Senior Core",
+    JUNIOR_CORE: "Junior Core",
+  };
+
+  const roleColors: Record<string, string> = {
+    MASTER_ADMIN: "red",
+    BOARD: "blue",
+    SENIOR_CORE: "yellow.7",
+    JUNIOR_CORE: "gray",
+  };
 
   return (
     <Stack justify="space-between" h="100%" pt="sm">
@@ -90,31 +113,44 @@ export function Sidebar() {
         })}
       </Stack>
 
-      {/* User section */}
-      <Stack gap="sm">
+      {/* User Section */}
+      <Stack gap="md">
         <Divider color="dark.4" />
 
         <Box
-          px="sm"
-          py="sm"
+          px="md"
+          py="md"
           style={{
-            borderRadius: 10,
-            backgroundColor: "rgba(255,255,255,0.05)",
+            borderRadius: 12,
+            backgroundColor: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          <Stack gap={4}>
-            <Text size="sm" c="gray.4">
-              Logged in as
-            </Text>
+          <Stack align="center" gap="xs">
+            <Avatar size={42} radius="xl" color="blue">
+              {session?.user?.name?.[0]?.toUpperCase() ?? "U"}
+            </Avatar>
 
-            <Text size="md" fw={600} c="white" truncate>
-              {session?.user?.email ?? "Unknown"}
-            </Text>
+            <Stack gap={2} align="center">
+              <Text size="sm" fw={600} c="white">
+                {session?.user?.name ?? "Unknown"}
+              </Text>
 
-            <Text size="sm" fw={500} c="gray.3">
-              {session?.user?.role}
-            </Text>
+              <Text size="xs" c="gray.4">
+                {session?.user?.email}
+              </Text>
+            </Stack>
+
+            {session?.user?.role && (
+              <Badge
+                size="sm"
+                variant="light"
+                color={roleColors[session.user.role]}
+                mt={4}
+              >
+                {roleLabels[session.user.role]}
+              </Badge>
+            )}
           </Stack>
         </Box>
 
