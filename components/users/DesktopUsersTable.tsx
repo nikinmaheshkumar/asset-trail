@@ -2,26 +2,21 @@
 
 import {
   Table,
-  ScrollArea,
-  Text,
-  Group,
   Badge,
   ActionIcon,
   Menu,
-  Button,
-  CopyButton,
+  Text,
+  Stack,
+  Group,
 } from "@mantine/core";
 
-import { modals } from "@mantine/modals";
-
 import {
-  IconUser,
-  IconMail,
-  IconShield,
   IconDotsVertical,
   IconTrash,
   IconKey,
 } from "@tabler/icons-react";
+
+import { modals } from "@mantine/modals";
 
 type Member = {
   id: number;
@@ -38,6 +33,13 @@ type Props = {
   currentUserId?: number;
 };
 
+const roleLabels: Record<string, string> = {
+  MASTER_ADMIN: "Master Admin",
+  BOARD: "Board",
+  SENIOR_CORE: "Senior Core",
+  JUNIOR_CORE: "Junior Core",
+};
+
 export function DesktopUsersTable({
   members,
   onRoleChange,
@@ -52,8 +54,7 @@ export function DesktopUsersTable({
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete <b>{name}</b>? This action cannot be
-          undone.
+          Delete <b>{name}</b>? This cannot be undone.
         </Text>
       ),
       labels: { confirm: "Delete", cancel: "Cancel" },
@@ -62,153 +63,100 @@ export function DesktopUsersTable({
     });
   }
 
-  function confirmReset(id: number, name: string) {
+  async function confirmReset(id: number, name: string) {
 
-    if (id === currentUserId) {
-      modals.open({
-        title: "Action Not Allowed",
-        centered: true,
-        children: (
-          <Text size="sm">
-            You cannot reset your own password.
-          </Text>
-        ),
-      });
-      return;
-    }
+    if (id === currentUserId) return;
 
-    modals.openConfirmModal({
-      title: "Reset Password",
-      centered: true,
+    const pwd = await onResetPassword(id, name);
+
+    modals.open({
+      title: "Password Reset",
       children: (
         <Text size="sm">
-          Reset password for <b>{name}</b>? They will be forced to change it on
-          next login.
+          New password: <b>{pwd}</b>
         </Text>
       ),
-      labels: { confirm: "Reset", cancel: "Cancel" },
-      confirmProps: { color: "orange" },
-
-      async onConfirm() {
-
-        try {
-
-          const newPassword = await onResetPassword(id, name);
-
-          modals.open({
-            title: "Password Reset Successful",
-            centered: true,
-            children: (
-              <>
-                <Text size="sm" mb="sm">
-                  Default password for <b>{name}</b>:
-                </Text>
-
-                <CopyButton value={newPassword}>
-                  {({ copied, copy }) => (
-                    <Button onClick={copy} fullWidth>
-                      {copied ? "Copied!" : newPassword}
-                    </Button>
-                  )}
-                </CopyButton>
-              </>
-            ),
-          });
-
-        } catch (error) {
-
-          modals.open({
-            title: "Reset Failed",
-            centered: true,
-            children: (
-              <Text size="sm">
-                {(error as Error).message || "Could not reset password"}
-              </Text>
-            ),
-          });
-
-        }
-
-      },
     });
+
   }
 
   return (
-    <ScrollArea>
-      <Table
-        verticalSpacing="lg"
-        horizontalSpacing="xl"
-        highlightOnHover
-        stickyHeader
-      >
+    <Table highlightOnHover verticalSpacing="lg">
 
-        <Table.Thead style={{ background: "#f8f9fa" }}>
-          <Table.Tr>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>ID</Table.Th>
+          <Table.Th>User</Table.Th>
+          <Table.Th>Role</Table.Th>
+          <Table.Th>Actions</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
 
-            <Table.Th>ID</Table.Th>
+      <Table.Tbody>
 
-            <Table.Th>
-              <Group gap={6}>
-                <IconUser size={18} />
-                <Text fw={700}>Name</Text>
-              </Group>
-            </Table.Th>
+        {members.map((member, index) => {
 
-            <Table.Th>
-              <Group gap={6}>
-                <IconMail size={18} />
-                <Text fw={700}>Email</Text>
-              </Group>
-            </Table.Th>
+          const isCurrentUser = member.id === currentUserId;
+          const isMasterAdmin = member.role === "MASTER_ADMIN";
 
-            <Table.Th>
-              <Group gap={6}>
-                <IconShield size={18} />
-                <Text fw={700}>Role</Text>
-              </Group>
-            </Table.Th>
+          return (
 
-            <Table.Th>Actions</Table.Th>
+            <Table.Tr
+              key={member.id}
+              style={
+                isCurrentUser
+                  ? { background: "#f8f9fa" }
+                  : undefined
+              }
+            >
 
-          </Table.Tr>
-        </Table.Thead>
-
-        <Table.Tbody>
-
-          {members.map((member, index) => (
-
-            <Table.Tr key={member.id}>
+              <Table.Td>{index + 1}</Table.Td>
 
               <Table.Td>
-                <Text fw={600}>{index + 1}</Text>
+
+                <Stack gap={0}>
+
+                  <Group gap={6}>
+                    <Text fw={600}>{member.name}</Text>
+
+                    {isCurrentUser && (
+                      <Badge size="xs" color="green">
+                        You
+                      </Badge>
+                    )}
+                  </Group>
+
+                  <Text size="sm" c="dimmed">
+                    {member.email}
+                  </Text>
+
+                </Stack>
+
               </Table.Td>
 
               <Table.Td>
-                <Text fw={700}>{member.name}</Text>
-              </Table.Td>
 
-              <Table.Td>
-                <Text>{member.email}</Text>
-              </Table.Td>
-
-              <Table.Td>
                 <Badge
                   variant="light"
+                  fw={600}
                   color={
                     member.role === "MASTER_ADMIN"
                       ? "red"
                       : member.role === "BOARD"
                       ? "blue"
+                      : member.role === "SENIOR_CORE"
+                      ? "yellow.7"
                       : "gray"
                   }
                 >
-                  {member.role}
+                  {roleLabels[member.role]}
                 </Badge>
+
               </Table.Td>
 
               <Table.Td>
 
-                <Menu shadow="md" width={200} position="bottom-end">
+                <Menu position="bottom-end">
 
                   <Menu.Target>
                     <ActionIcon variant="subtle">
@@ -218,39 +166,42 @@ export function DesktopUsersTable({
 
                   <Menu.Dropdown>
 
-                    <Menu.Label>
-                      <Text fw={700} size="sm">
-                        Change Role
-                      </Text>
-                    </Menu.Label>
+                    <Menu.Label>Change Role</Menu.Label>
 
                     <Menu.Item
+                      disabled={isCurrentUser}
                       onClick={() => onRoleChange(member.id, "MASTER_ADMIN")}
                     >
-                      <Text size="xs">MASTER_ADMIN</Text>
+                      Master Admin
                     </Menu.Item>
 
                     <Menu.Item
+                      disabled={isCurrentUser}
                       onClick={() => onRoleChange(member.id, "BOARD")}
                     >
-                      <Text size="xs">BOARD</Text>
+                      Board
                     </Menu.Item>
 
                     <Menu.Item
+                      disabled={isCurrentUser}
                       onClick={() => onRoleChange(member.id, "SENIOR_CORE")}
                     >
-                      <Text size="xs">SENIOR_CORE</Text>
+                      Senior Core
                     </Menu.Item>
 
                     <Menu.Item
+                      disabled={isCurrentUser}
                       onClick={() => onRoleChange(member.id, "JUNIOR_CORE")}
                     >
-                      <Text size="xs">JUNIOR_CORE</Text>
+                      Junior Core
                     </Menu.Item>
 
                     <Menu.Divider />
 
+                    <Menu.Label>Security</Menu.Label>
+
                     <Menu.Item
+                      disabled={isCurrentUser}
                       leftSection={<IconKey size={16} />}
                       onClick={() => confirmReset(member.id, member.name)}
                     >
@@ -259,8 +210,11 @@ export function DesktopUsersTable({
 
                     <Menu.Divider />
 
+                    <Menu.Label c="red">Danger Zone</Menu.Label>
+
                     <Menu.Item
                       color="red"
+                      disabled={isCurrentUser || isMasterAdmin}
                       leftSection={<IconTrash size={16} />}
                       onClick={() =>
                         confirmDelete(member.id, member.name)
@@ -277,11 +231,12 @@ export function DesktopUsersTable({
 
             </Table.Tr>
 
-          ))}
+          );
 
-        </Table.Tbody>
+        })}
 
-      </Table>
-    </ScrollArea>
+      </Table.Tbody>
+
+    </Table>
   );
 }

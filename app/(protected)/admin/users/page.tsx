@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { IconPlus } from "@tabler/icons-react";
-import { DesktopUsersTable } from "@/components/users/DesktopUsersTable";
+import { UsersTable } from "@/components/users/UsersTable";
 import { useDisclosure } from "@mantine/hooks";
 import { AddMemberModal } from "@/components/users/AddMemberModal";
 
@@ -100,7 +100,7 @@ export default function UsersPage() {
       />
 
       <Paper withBorder radius="md" p="md">
-        <DesktopUsersTable
+        <UsersTable
           members={members}
           onRoleChange={handleRoleChange}
           onDelete={handleDelete}
