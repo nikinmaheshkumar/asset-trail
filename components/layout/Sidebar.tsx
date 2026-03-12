@@ -159,7 +159,7 @@ export function Sidebar() {
           variant="light"
           color="red"
           fullWidth
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut({ redirect: true, callbackUrl: "/login" })}
         >
           Logout
         </Button>
