@@ -8,14 +8,19 @@ import {
   Badge,
   ActionIcon,
   Menu,
+  Button,
+  CopyButton,
 } from "@mantine/core";
+
 import { modals } from "@mantine/modals";
+
 import {
   IconUser,
   IconMail,
   IconShield,
   IconDotsVertical,
   IconTrash,
+  IconKey,
 } from "@tabler/icons-react";
 
 type Member = {
@@ -29,12 +34,16 @@ type Props = {
   members: Member[];
   onRoleChange: (id: number, role: string) => void;
   onDelete: (id: number) => void;
+  onResetPassword: (id: number, name: string) => Promise<string>;
+  currentUserId?: number;
 };
 
 export function DesktopUsersTable({
   members,
   onRoleChange,
   onDelete,
+  onResetPassword,
+  currentUserId,
 }: Props) {
 
   function confirmDelete(id: number, name: string) {
@@ -53,6 +62,77 @@ export function DesktopUsersTable({
     });
   }
 
+  function confirmReset(id: number, name: string) {
+
+    if (id === currentUserId) {
+      modals.open({
+        title: "Action Not Allowed",
+        centered: true,
+        children: (
+          <Text size="sm">
+            You cannot reset your own password.
+          </Text>
+        ),
+      });
+      return;
+    }
+
+    modals.openConfirmModal({
+      title: "Reset Password",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Reset password for <b>{name}</b>? They will be forced to change it on
+          next login.
+        </Text>
+      ),
+      labels: { confirm: "Reset", cancel: "Cancel" },
+      confirmProps: { color: "orange" },
+
+      async onConfirm() {
+
+        try {
+
+          const newPassword = await onResetPassword(id, name);
+
+          modals.open({
+            title: "Password Reset Successful",
+            centered: true,
+            children: (
+              <>
+                <Text size="sm" mb="sm">
+                  Default password for <b>{name}</b>:
+                </Text>
+
+                <CopyButton value={newPassword}>
+                  {({ copied, copy }) => (
+                    <Button onClick={copy} fullWidth>
+                      {copied ? "Copied!" : newPassword}
+                    </Button>
+                  )}
+                </CopyButton>
+              </>
+            ),
+          });
+
+        } catch (error) {
+
+          modals.open({
+            title: "Reset Failed",
+            centered: true,
+            children: (
+              <Text size="sm">
+                {(error as Error).message || "Could not reset password"}
+              </Text>
+            ),
+          });
+
+        }
+
+      },
+    });
+  }
+
   return (
     <ScrollArea>
       <Table
@@ -61,9 +141,10 @@ export function DesktopUsersTable({
         highlightOnHover
         stickyHeader
       >
-        {/* HEADER */}
+
         <Table.Thead style={{ background: "#f8f9fa" }}>
           <Table.Tr>
+
             <Table.Th>ID</Table.Th>
 
             <Table.Th>
@@ -88,12 +169,14 @@ export function DesktopUsersTable({
             </Table.Th>
 
             <Table.Th>Actions</Table.Th>
+
           </Table.Tr>
         </Table.Thead>
 
-        {/* BODY */}
         <Table.Tbody>
+
           {members.map((member, index) => (
+
             <Table.Tr key={member.id}>
 
               <Table.Td>
@@ -123,9 +206,10 @@ export function DesktopUsersTable({
                 </Badge>
               </Table.Td>
 
-              {/* ACTIONS */}
               <Table.Td>
+
                 <Menu shadow="md" width={200} position="bottom-end">
+
                   <Menu.Target>
                     <ActionIcon variant="subtle">
                       <IconDotsVertical size={18} />
@@ -134,14 +218,12 @@ export function DesktopUsersTable({
 
                   <Menu.Dropdown>
 
-                    {/* BIGGER HEADER */}
                     <Menu.Label>
                       <Text fw={700} size="sm">
                         Change Role
                       </Text>
                     </Menu.Label>
 
-                    {/* SMALLER ROLE OPTIONS */}
                     <Menu.Item
                       onClick={() => onRoleChange(member.id, "MASTER_ADMIN")}
                     >
@@ -168,7 +250,15 @@ export function DesktopUsersTable({
 
                     <Menu.Divider />
 
-                    {/* DELETE WITH CONFIRMATION */}
+                    <Menu.Item
+                      leftSection={<IconKey size={16} />}
+                      onClick={() => confirmReset(member.id, member.name)}
+                    >
+                      Reset Password
+                    </Menu.Item>
+
+                    <Menu.Divider />
+
                     <Menu.Item
                       color="red"
                       leftSection={<IconTrash size={16} />}
@@ -180,12 +270,17 @@ export function DesktopUsersTable({
                     </Menu.Item>
 
                   </Menu.Dropdown>
+
                 </Menu>
+
               </Table.Td>
 
             </Table.Tr>
+
           ))}
+
         </Table.Tbody>
+
       </Table>
     </ScrollArea>
   );

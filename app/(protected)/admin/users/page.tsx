@@ -25,6 +25,9 @@ export default function UsersPage() {
   const [opened, { open, close }] = useDisclosure(false);
 
   const userRole = session?.user?.role;
+  const currentUserId = session?.user?.id;
+
+  const DEFAULT_PASSWORD = "Temp@123";
 
   useEffect(() => {
     if (status === "loading") return;
@@ -58,10 +61,30 @@ export default function UsersPage() {
     fetchMembers();
   }
 
+  async function handleResetPassword(id: number) {
+
+    if (id === currentUserId) {
+      throw new Error("You cannot reset your own password");
+    }
+
+    const res = await fetch(`/api/members/${id}/reset-password`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: DEFAULT_PASSWORD }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Reset failed");
+    }
+
+    return DEFAULT_PASSWORD;
+  }
+
   useEffect(() => {
-    (async () => {
+    const loadMembers = async () => {
       await fetchMembers();
-    })();
+    };
+    loadMembers();
   }, []);
 
   return (
@@ -81,6 +104,8 @@ export default function UsersPage() {
           members={members}
           onRoleChange={handleRoleChange}
           onDelete={handleDelete}
+          onResetPassword={handleResetPassword}
+          currentUserId={currentUserId}
         />
       </Paper>
 

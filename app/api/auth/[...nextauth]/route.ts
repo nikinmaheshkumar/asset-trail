@@ -11,6 +11,7 @@ declare module "next-auth" {
 
   interface Session {
     user: {
+      id: number;
       name?: string | null;
       email?: string | null;
       image?: string | null;
@@ -22,6 +23,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
+    id?: string;
     role?: "MASTER_ADMIN" | "BOARD" | "SENIOR_CORE" | "JUNIOR_CORE";
     mustChangePwd?: boolean;
   }
@@ -77,6 +79,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id.toString();
         token.role = user.role;
         token.mustChangePwd = user.mustChangePwd;
       }
@@ -85,6 +88,7 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       if (session.user) {
+        session.user.id = Number(token.id);
         session.user.role = token.role;
         session.user.mustChangePwd = token.mustChangePwd;
       }
