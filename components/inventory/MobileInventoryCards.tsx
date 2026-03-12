@@ -12,14 +12,27 @@ import {
   Box,
 } from "@mantine/core";
 import { Item } from "./InventoryTable";
-
+import { RoleGuard } from "@/components/auth/RoleGuard";
+import { useSession } from "next-auth/react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 type Props = {
   items: Item[];
   borrowingId: number | null;
   onBorrow: (id: number) => void;
+  onEdit: (item: Item) => void;
+  onDelete: (item: Item) => void;
 };
 
-export function MobileInventoryCards({ items, borrowingId, onBorrow }: Props) {
+export function MobileInventoryCards({
+  items,
+  borrowingId,
+  onBorrow,
+  onEdit,
+  onDelete,
+}: Props) {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
   return (
     <Stack gap="md">
       {items.map((item, index) => {
@@ -32,19 +45,15 @@ export function MobileInventoryCards({ items, borrowingId, onBorrow }: Props) {
 
         return (
           <Card key={item.id} radius="xl" shadow="xs" withBorder p="lg">
-            {/* Header */}
-            <Group justify="space-between" align="flex-start" mb="xs">
+            <Group justify="space-between">
               <Box>
                 <Text size="sm" c="dimmed">
                   #{index + 1}
                 </Text>
-                <Text fw={600} size="lg">
-                  {item.name}
-                </Text>
+                <Text fw={600}>{item.name}</Text>
               </Box>
 
               <Badge
-                size="md"
                 variant="light"
                 color={
                   item.status === "WORKING"
@@ -62,31 +71,27 @@ export function MobileInventoryCards({ items, borrowingId, onBorrow }: Props) {
 
             <Divider my="sm" />
 
-            {/* Details */}
-            <Stack gap={6}>
-              <Text size="sm" c="dimmed">
-                Category
+            <Text size="sm" c="dimmed">
+              Category
+            </Text>
+            <Text>{item.category}</Text>
+
+            <Text size="sm" c="dimmed" mt="xs">
+              Availability
+            </Text>
+
+            <Group justify="space-between">
+              <Text fw={600}>
+                {item.quantity_available}/{item.quantity_total}
               </Text>
-              <Text fw={500}>{item.category}</Text>
 
-              <Text size="sm" c="dimmed" mt="xs">
-                Availability
-              </Text>
+              {lowStock && (
+                <Badge color="red" size="sm" variant="light">
+                  Low stock
+                </Badge>
+              )}
+            </Group>
 
-              <Group justify="space-between">
-                <Text fw={600}>
-                  {item.quantity_available}/{item.quantity_total}
-                </Text>
-
-                {lowStock && (
-                  <Badge color="red" size="sm" variant="light">
-                    Low stock
-                  </Badge>
-                )}
-              </Group>
-            </Stack>
-
-            {/* Action */}
             <Tooltip
               label={unavailable ? "Item unavailable" : ""}
               disabled={!unavailable}
@@ -94,10 +99,7 @@ export function MobileInventoryCards({ items, borrowingId, onBorrow }: Props) {
               <Button
                 mt="lg"
                 fullWidth
-                radius="md"
                 size="sm"
-                variant="filled"
-                color="dark"
                 loading={borrowingId === item.id}
                 disabled={unavailable}
                 onClick={() => onBorrow(item.id)}
@@ -105,6 +107,31 @@ export function MobileInventoryCards({ items, borrowingId, onBorrow }: Props) {
                 Borrow
               </Button>
             </Tooltip>
+
+            <RoleGuard role={role} allow={["MASTER_ADMIN", "BOARD"]}>
+              <Group mt="sm" grow>
+                <Button
+                  size="sm"
+                  fw={700}
+                  variant="light"
+                  leftSection={<IconEdit size={16} />}
+                  onClick={() => onEdit(item)}
+                >
+                  Edit
+                </Button>
+
+                <Button
+                  size="sm"
+                  fw={700}
+                  color="red"
+                  variant="light"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={() => onDelete(item)}
+                >
+                  Delete
+                </Button>
+              </Group>
+            </RoleGuard>
           </Card>
         );
       })}

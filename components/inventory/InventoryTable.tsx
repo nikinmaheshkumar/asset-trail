@@ -24,19 +24,22 @@ import { DesktopInventoryTable } from "./DesktopInventoryTable";
 import { MobileInventoryCards } from "./MobileInventoryCards";
 
 export type Item = {
-  id: number;
-  name: string;
-  category: string;
-  quantity_total: number;
-  quantity_available: number;
-  status: string;
+  id: number
+  name: string
+  category: string
+  location: string
+  quantity_total: number
+  quantity_available: number
+  status: string
 };
 
 type Props = {
   refreshKey: number;
+  onEdit: (item: Item) => void;
+  onDelete: (item: Item) => void;
 };
 
-export function InventoryTable({ refreshKey }: Props) {
+export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [borrowingId, setBorrowingId] = useState<number | null>(null);
@@ -150,10 +153,7 @@ export function InventoryTable({ refreshKey }: Props) {
   const startItem =
     filteredItems.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1;
 
-  const endItem = Math.min(
-    page * ITEMS_PER_PAGE,
-    filteredItems.length
-  );
+  const endItem = Math.min(page * ITEMS_PER_PAGE, filteredItems.length);
 
   const handleReset = () => {
     setSearch("");
@@ -242,12 +242,16 @@ export function InventoryTable({ refreshKey }: Props) {
           items={paginatedItems}
           borrowingId={borrowingId}
           onBorrow={handleBorrow}
+          onEdit={onEdit}
+          onDelete={onDelete}
         />
       ) : (
         <DesktopInventoryTable
           items={paginatedItems}
           borrowingId={borrowingId}
           onBorrow={handleBorrow}
+          onEdit={onEdit}
+          onDelete={onDelete}
         />
       )}
 

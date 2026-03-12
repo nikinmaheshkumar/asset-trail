@@ -18,14 +18,27 @@ import {
   IconBolt,
 } from "@tabler/icons-react";
 import { Item } from "./InventoryTable";
-
+import { RoleGuard } from "@/components/auth/RoleGuard";
+import { useSession } from "next-auth/react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 type Props = {
   items: Item[];
   borrowingId: number | null;
   onBorrow: (id: number) => void;
+  onEdit: (item: Item) => void;
+  onDelete: (item: Item) => void;
 };
 
-export function DesktopInventoryTable({ items, borrowingId, onBorrow }: Props) {
+export function DesktopInventoryTable({
+  items,
+  borrowingId,
+  onBorrow,
+  onEdit,
+  onDelete,
+}: Props) {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
   return (
     <ScrollArea>
       <Table
@@ -34,64 +47,58 @@ export function DesktopInventoryTable({ items, borrowingId, onBorrow }: Props) {
         highlightOnHover
         stickyHeader
       >
-        {/* ===== HEADER ===== */}
         <Table.Thead style={{ background: "#f8f9fa" }}>
           <Table.Tr>
             <Table.Th>
               <Group gap={6}>
                 <IconHash size={18} />
-                <Text fw={800} size="md"></Text>
               </Group>
             </Table.Th>
 
             <Table.Th>
               <Group gap={6}>
                 <IconBox size={18} />
-                <Text fw={800} size="md">
-                  Item
-                </Text>
+                <Text fw={800}>Item</Text>
               </Group>
             </Table.Th>
 
             <Table.Th>
               <Group gap={6}>
                 <IconCategory size={18} />
-                <Text fw={800} size="md">
-                  Category
-                </Text>
+                <Text fw={800}>Category</Text>
               </Group>
             </Table.Th>
 
             <Table.Th>
               <Group gap={6}>
                 <IconStack2 size={18} />
-                <Text fw={800} size="md">
-                  Availability
-                </Text>
+                <Text fw={800}>Availability</Text>
               </Group>
             </Table.Th>
 
             <Table.Th>
               <Group gap={6}>
                 <IconInfoCircle size={18} />
-                <Text fw={800} size="md">
-                  Status
-                </Text>
+                <Text fw={800}>Status</Text>
               </Group>
             </Table.Th>
 
             <Table.Th>
               <Group gap={6}>
                 <IconBolt size={18} />
-                <Text fw={800} size="md">
-                  Action
-                </Text>
+                <Text fw={800}>Borrow</Text>
               </Group>
             </Table.Th>
+
+            {/* ACTION COLUMN */}
+            <RoleGuard role={role} allow={["MASTER_ADMIN", "BOARD"]}>
+              <Table.Th>
+                <Text fw={800}>Actions</Text>
+              </Table.Th>
+            </RoleGuard>
           </Table.Tr>
         </Table.Thead>
 
-        {/* ===== BODY ===== */}
         <Table.Tbody>
           {items.map((item, index) => {
             const unavailable =
@@ -103,31 +110,22 @@ export function DesktopInventoryTable({ items, borrowingId, onBorrow }: Props) {
 
             return (
               <Table.Tr key={item.id}>
-                {/* Index */}
                 <Table.Td>
-                  <Text size="md" fw={600}>
-                    {index + 1}
-                  </Text>
+                  <Text fw={600}>{index + 1}</Text>
                 </Table.Td>
 
-                {/* Item */}
                 <Table.Td>
-                  <Text fw={700} size="lg">
-                    {item.name}
-                  </Text>
+                  <Text fw={700}>{item.name}</Text>
                 </Table.Td>
 
-                {/* Category */}
                 <Table.Td>
-                  <Text size="md">{item.category}</Text>
+                  <Text>{item.category}</Text>
                 </Table.Td>
 
-                {/* Availability */}
                 <Table.Td>
                   <Group gap={8}>
                     <Text
                       fw={800}
-                      size="lg"
                       c={
                         lowStock
                           ? "red"
@@ -139,24 +137,18 @@ export function DesktopInventoryTable({ items, borrowingId, onBorrow }: Props) {
                       {item.quantity_available}
                     </Text>
 
-                    <Text size="md" c="dimmed">
-                      / {item.quantity_total}
-                    </Text>
+                    <Text c="dimmed">/ {item.quantity_total}</Text>
 
                     {lowStock && (
-                      <Badge size="sm" color="red" variant="light" radius="xl">
+                      <Badge color="red" variant="light" radius="xl">
                         Low
                       </Badge>
                     )}
                   </Group>
                 </Table.Td>
 
-                {/* Status */}
                 <Table.Td>
                   <Badge
-                    size="md"
-                    radius="md"
-                    variant="filled"
                     color={
                       item.status === "WORKING"
                         ? "green"
@@ -171,7 +163,7 @@ export function DesktopInventoryTable({ items, borrowingId, onBorrow }: Props) {
                   </Badge>
                 </Table.Td>
 
-                {/* Action */}
+                {/* Borrow */}
                 <Table.Td>
                   <Tooltip
                     label={unavailable ? "Item unavailable" : ""}
@@ -187,6 +179,36 @@ export function DesktopInventoryTable({ items, borrowingId, onBorrow }: Props) {
                     </Button>
                   </Tooltip>
                 </Table.Td>
+
+                {/* ACTIONS */}
+                <RoleGuard role={role} allow={["MASTER_ADMIN", "BOARD"]}>
+                  <Table.Td>
+                    <Group gap="sm">
+                      <Button
+                        size="sm"
+                        fw={700}
+                        variant="light"
+                        px="md"
+                        leftSection={<IconEdit size={16} />}
+                        onClick={() => onEdit(item)}
+                      >
+                        Edit
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        fw={700}
+                        color="red"
+                        variant="light"
+                        px="md"
+                        leftSection={<IconTrash size={16} />}
+                        onClick={() => onDelete(item)}
+                      >
+                        Delete
+                      </Button>
+                    </Group>
+                  </Table.Td>
+                </RoleGuard>
               </Table.Tr>
             );
           })}
