@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@mantine/core";
+import { Button, Center, Loader } from "@mantine/core";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -22,6 +22,8 @@ export default function UsersPage() {
   const router = useRouter();
 
   const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [opened, { open, close }] = useDisclosure(false);
 
   const userRole = session?.user?.role;
@@ -38,9 +40,16 @@ export default function UsersPage() {
   }, [userRole, status, router]);
 
   async function fetchMembers() {
-    const res = await fetch("/api/members");
-    const data = await res.json();
-    setMembers(data);
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/members");
+      const data = await res.json();
+
+      setMembers(data);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleRoleChange(id: number, role: string) {
@@ -62,7 +71,6 @@ export default function UsersPage() {
   }
 
   async function handleResetPassword(id: number) {
-
     if (id === currentUserId) {
       throw new Error("You cannot reset your own password");
     }
@@ -81,10 +89,7 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
-    const loadMembers = async () => {
-      await fetchMembers();
-    };
-    loadMembers();
+    fetchMembers();
   }, []);
 
   return (
@@ -98,6 +103,12 @@ export default function UsersPage() {
           </Button>
         }
       />
+
+      {loading ? (
+        <Center py="xl">
+          <Loader size="lg" />
+        </Center>
+      ) : (
         <UsersTable
           members={members}
           onRoleChange={handleRoleChange}
@@ -105,6 +116,7 @@ export default function UsersPage() {
           onResetPassword={handleResetPassword}
           currentUserId={currentUserId}
         />
+      )}
 
       <AddMemberModal
         opened={opened}
