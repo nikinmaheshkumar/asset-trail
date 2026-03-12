@@ -1,0 +1,24 @@
+info:
+  name: Post items
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/api/items
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Jumper Wires",
+        "category": "Consumables",
+        "quantity_total": 0,
+        "location": "Bin J"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,21 @@
+info:
+  name: Return items
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:3000/api/loans/1
+  body:
+    type: json
+    data: |-
+      {
+        "status": "RETURNED"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

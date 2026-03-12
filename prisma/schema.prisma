@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  MASTER_ADMIN
+  BOARD
+  SENIOR_CORE
+  JUNIOR_CORE
+}
+
+enum ItemStatus {
+  WORKING
+  NEEDS_TESTING
+  FAULTY
+  SCRAP
+}
+
+enum LoanStatus {
+  BORROWED
+  RETURNED
+  LOST
+  DAMAGED
+}
+
+model Member {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          Role     @default(JUNIOR_CORE)
+  mustChangePwd Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  loans         Loan[]
+}
+
+model Item {
+  id                 Int        @id @default(autoincrement())
+  name               String
+  category           String
+  quantity_total     Int
+  quantity_available Int
+  location           String
+  status             ItemStatus @default(WORKING)
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+
+  loans              Loan[]
+}
+
+model Loan {
+  id           Int        @id @default(autoincrement())
+  item_id      Int
+  member_id    Int
+  borrow_date  DateTime   @default(now())
+  due_date     DateTime
+  return_date  DateTime?
+  purpose      String
+  status       LoanStatus @default(BORROWED)
+  damage_notes String?
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+
+  item   Item   @relation(fields: [item_id], references: [id])
+  member Member @relation(fields: [member_id], references: [id])
+
+  @@index([item_id])
+  @@index([member_id])
+}
