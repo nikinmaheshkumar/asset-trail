@@ -15,6 +15,7 @@ import { Item } from "./InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useSession } from "next-auth/react";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+
 type Props = {
   items: Item[];
   borrowingId: number | null;
@@ -43,8 +44,12 @@ export function MobileInventoryCards({
           item.quantity_available > 0 &&
           item.quantity_available <= item.quantity_total * 0.2;
 
+        const borrowed =
+          item.quantity_total - item.quantity_available;
+
         return (
           <Card key={item.id} radius="xl" shadow="xs" withBorder p="lg">
+            {/* Header */}
             <Group justify="space-between">
               <Box>
                 <Text size="sm" c="dimmed">
@@ -59,10 +64,10 @@ export function MobileInventoryCards({
                   item.status === "WORKING"
                     ? "green"
                     : item.status === "NEEDS_TESTING"
-                      ? "yellow"
-                      : item.status === "FAULTY"
-                        ? "red"
-                        : "gray"
+                    ? "yellow"
+                    : item.status === "FAULTY"
+                    ? "red"
+                    : "gray"
                 }
               >
                 {item.status}
@@ -71,11 +76,16 @@ export function MobileInventoryCards({
 
             <Divider my="sm" />
 
+            {/* Category */}
             <Text size="sm" c="dimmed">
               Category
             </Text>
-            <Text>{item.category}</Text>
 
+            <Badge variant="light" mt={4}>
+              {item.category}
+            </Badge>
+
+            {/* Availability */}
             <Text size="sm" c="dimmed" mt="xs">
               Availability
             </Text>
@@ -92,8 +102,15 @@ export function MobileInventoryCards({
               )}
             </Group>
 
+            {/* Borrow */}
             <Tooltip
-              label={unavailable ? "Item unavailable" : ""}
+              label={
+                unavailable
+                  ? item.quantity_available === 0
+                    ? "Out of stock"
+                    : "Item not available"
+                  : ""
+              }
               disabled={!unavailable}
             >
               <Button
@@ -104,10 +121,13 @@ export function MobileInventoryCards({
                 disabled={unavailable}
                 onClick={() => onBorrow(item.id)}
               >
-                Borrow
+                {item.quantity_available === 0
+                  ? "Out of Stock"
+                  : "Borrow"}
               </Button>
             </Tooltip>
 
+            {/* Actions */}
             <RoleGuard role={role} allow={["MASTER_ADMIN", "BOARD"]}>
               <Group mt="sm" grow>
                 <Button
@@ -120,16 +140,26 @@ export function MobileInventoryCards({
                   Edit
                 </Button>
 
-                <Button
-                  size="sm"
-                  fw={700}
-                  color="red"
-                  variant="light"
-                  leftSection={<IconTrash size={16} />}
-                  onClick={() => onDelete(item)}
+                <Tooltip
+                  label={
+                    borrowed > 0
+                      ? "Item has active loans"
+                      : ""
+                  }
+                  disabled={borrowed === 0}
                 >
-                  Delete
-                </Button>
+                  <Button
+                    size="sm"
+                    fw={700}
+                    color="red"
+                    variant="light"
+                    leftSection={<IconTrash size={16} />}
+                    disabled={borrowed > 0}
+                    onClick={() => onDelete(item)}
+                  >
+                    Delete
+                  </Button>
+                </Tooltip>
               </Group>
             </RoleGuard>
           </Card>

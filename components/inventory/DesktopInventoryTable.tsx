@@ -16,11 +16,13 @@ import {
   IconStack2,
   IconInfoCircle,
   IconBolt,
+  IconEdit,
+  IconTrash,
 } from "@tabler/icons-react";
 import { Item } from "./InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useSession } from "next-auth/react";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+
 type Props = {
   items: Item[];
   borrowingId: number | null;
@@ -90,7 +92,6 @@ export function DesktopInventoryTable({
               </Group>
             </Table.Th>
 
-            {/* ACTION COLUMN */}
             <RoleGuard role={role} allow={["MASTER_ADMIN", "BOARD"]}>
               <Table.Th>
                 <Text fw={800}>Actions</Text>
@@ -108,20 +109,27 @@ export function DesktopInventoryTable({
               item.quantity_available > 0 &&
               item.quantity_available <= item.quantity_total * 0.2;
 
+            const borrowed =
+              item.quantity_total - item.quantity_available;
+
             return (
               <Table.Tr key={item.id}>
+                {/* Index */}
                 <Table.Td>
                   <Text fw={600}>{index + 1}</Text>
                 </Table.Td>
 
+                {/* Item */}
                 <Table.Td>
                   <Text fw={700}>{item.name}</Text>
                 </Table.Td>
 
+                {/* Category */}
                 <Table.Td>
-                  <Text>{item.category}</Text>
+                  <Badge variant="light">{item.category}</Badge>
                 </Table.Td>
 
+                {/* Availability */}
                 <Table.Td>
                   <Group gap={8}>
                     <Text
@@ -130,8 +138,8 @@ export function DesktopInventoryTable({
                         lowStock
                           ? "red"
                           : item.quantity_available === 0
-                            ? "gray"
-                            : undefined
+                          ? "gray"
+                          : undefined
                       }
                     >
                       {item.quantity_available}
@@ -147,16 +155,17 @@ export function DesktopInventoryTable({
                   </Group>
                 </Table.Td>
 
+                {/* Status */}
                 <Table.Td>
                   <Badge
                     color={
                       item.status === "WORKING"
                         ? "green"
                         : item.status === "NEEDS_TESTING"
-                          ? "yellow"
-                          : item.status === "FAULTY"
-                            ? "red"
-                            : "gray"
+                        ? "yellow"
+                        : item.status === "FAULTY"
+                        ? "red"
+                        : "gray"
                     }
                   >
                     {item.status}
@@ -166,7 +175,13 @@ export function DesktopInventoryTable({
                 {/* Borrow */}
                 <Table.Td>
                   <Tooltip
-                    label={unavailable ? "Item unavailable" : ""}
+                    label={
+                      unavailable
+                        ? item.quantity_available === 0
+                          ? "Out of stock"
+                          : "Item not available"
+                        : ""
+                    }
                     disabled={!unavailable}
                   >
                     <Button
@@ -175,12 +190,14 @@ export function DesktopInventoryTable({
                       disabled={unavailable}
                       onClick={() => onBorrow(item.id)}
                     >
-                      Borrow
+                      {item.quantity_available === 0
+                        ? "Out of Stock"
+                        : "Borrow"}
                     </Button>
                   </Tooltip>
                 </Table.Td>
 
-                {/* ACTIONS */}
+                {/* Actions */}
                 <RoleGuard role={role} allow={["MASTER_ADMIN", "BOARD"]}>
                   <Table.Td>
                     <Group gap="sm">
@@ -195,17 +212,27 @@ export function DesktopInventoryTable({
                         Edit
                       </Button>
 
-                      <Button
-                        size="sm"
-                        fw={700}
-                        color="red"
-                        variant="light"
-                        px="md"
-                        leftSection={<IconTrash size={16} />}
-                        onClick={() => onDelete(item)}
+                      <Tooltip
+                        label={
+                          borrowed > 0
+                            ? "Item has active loans"
+                            : ""
+                        }
+                        disabled={borrowed === 0}
                       >
-                        Delete
-                      </Button>
+                        <Button
+                          size="sm"
+                          fw={700}
+                          color="red"
+                          variant="light"
+                          px="md"
+                          leftSection={<IconTrash size={16} />}
+                          disabled={borrowed > 0}
+                          onClick={() => onDelete(item)}
+                        >
+                          Delete
+                        </Button>
+                      </Tooltip>
                     </Group>
                   </Table.Td>
                 </RoleGuard>

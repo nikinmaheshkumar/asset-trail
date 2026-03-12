@@ -1,7 +1,13 @@
 "use client";
 
-import { Modal, TextInput, NumberInput, Button, Stack } from "@mantine/core";
-import { useState } from "react";
+import {
+  Modal,
+  TextInput,
+  NumberInput,
+  Button,
+  Stack,
+} from "@mantine/core";
+import { useState, useEffect } from "react";
 import { notifications } from "@mantine/notifications";
 
 type Props = {
@@ -17,8 +23,34 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!opened) {
+      setName("");
+      setCategory("");
+      setQuantityTotal("");
+      setLocation("");
+    }
+  }, [opened]);
+
   const handleSubmit = async () => {
-    if (!name || !category || quantityTotal === "" || !location) return;
+    if (!name || !category || quantityTotal === "" || !location) {
+      notifications.show({
+        color: "red",
+        title: "Missing fields",
+        message: "Please fill all required fields",
+      });
+      return;
+    }
+
+    if (typeof quantityTotal === "number" && quantityTotal < 0) {
+      notifications.show({
+        color: "red",
+        title: "Invalid quantity",
+        message: "Quantity cannot be negative",
+      });
+      return;
+    }
 
     try {
       setLoading(true);
@@ -48,12 +80,6 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
       });
 
       onCreated();
-
-      setName("");
-      setCategory("");
-      setQuantityTotal("");
-      setLocation("");
-
       onClose();
     } catch (err: any) {
       notifications.show({
@@ -67,10 +93,18 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Add Item">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Add Item"
+      centered
+    >
       <Stack>
+
         <TextInput
           label="Item Name"
+          placeholder="Camera"
+          autoFocus
           value={name}
           onChange={(e) => setName(e.currentTarget.value)}
           required
@@ -78,6 +112,7 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
 
         <TextInput
           label="Category"
+          placeholder="Electronics"
           value={category}
           onChange={(e) => setCategory(e.currentTarget.value)}
           required
@@ -85,6 +120,7 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
 
         <NumberInput
           label="Total Quantity"
+          placeholder="10"
           min={0}
           value={quantityTotal}
           onChange={(value) => {
@@ -96,6 +132,7 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
 
         <TextInput
           label="Location"
+          placeholder="Storage Room A"
           value={location}
           onChange={(e) => setLocation(e.currentTarget.value)}
           required
@@ -108,6 +145,7 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
         >
           Create Item
         </Button>
+
       </Stack>
     </Modal>
   );

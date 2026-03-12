@@ -61,7 +61,12 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
       const res = await fetch("/api/items");
       const data = await res.json();
 
-      setItems(data);
+      // Alphabetical sorting
+      const sorted = data.sort((a: Item, b: Item) =>
+        a.name.localeCompare(b.name)
+      );
+
+      setItems(sorted);
     } catch {
       notifications.show({
         color: "red",
@@ -162,10 +167,13 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
     setLowStockOnly(false);
   };
 
+  const filtersActive =
+    search || categoryFilter || statusFilter || lowStockOnly;
+
   if (loading) {
     return (
       <Center py="xl">
-        <Loader />
+        <Loader size="lg" />
       </Center>
     );
   }
@@ -175,6 +183,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
 
   return (
     <Stack gap="xl">
+
       {/* FILTER PANEL */}
       <Paper withBorder radius="md" p="md" shadow="xs">
         <Group justify="space-between" mb="md">
@@ -183,16 +192,18 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
           </Title>
 
           <Button
-            variant="filled"
+            variant="light"
             size="sm"
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
+            disabled={!filtersActive}
           >
             Reset
           </Button>
         </Group>
 
         <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
+
           <TextInput
             label="Search"
             placeholder="Search item..."
@@ -229,13 +240,16 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
               onChange={(e) => setLowStockOnly(e.currentTarget.checked)}
             />
           </Group>
+
         </SimpleGrid>
       </Paper>
 
       {/* TABLE OR CARDS */}
       {paginatedItems.length === 0 ? (
         <Center py="lg">
-          <Text c="dimmed">No matching results</Text>
+          <Text c="dimmed">
+            No items match your filters
+          </Text>
         </Center>
       ) : isMobile ? (
         <MobileInventoryCards
@@ -255,9 +269,11 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
         />
       )}
 
+      {/* PAGINATION */}
       {totalPages > 1 && (
         <>
           <Divider />
+
           <Group justify="space-between" align="center">
             <Text size="sm" fw={500}>
               Showing {startItem}-{endItem} of {filteredItems.length}

@@ -53,7 +53,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, category, quantity_total, location } = body;
+    let { name, category, quantity_total, location } = body;
+
+    // Normalize inputs
+    name = name?.trim();
+    category = category?.trim();
+    location = location?.trim();
 
     if (!name || !category || quantity_total == null || !location) {
       return NextResponse.json(
@@ -66,18 +71,39 @@ export async function POST(req: Request) {
 
     if (isNaN(total) || total < 0) {
       return NextResponse.json(
-        { error: "Invalid quantity_total" },
+        { error: "Quantity must be a non-negative number" },
         { status: 400 }
+      );
+    }
+
+    // 🔒 Duplicate protection
+    const existingItem = await prisma.item.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: "insensitive",
+        },
+        location: {
+          equals: location,
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (existingItem) {
+      return NextResponse.json(
+        { error: "An item with this name already exists at this location" },
+        { status: 409 }
       );
     }
 
     const item = await prisma.item.create({
       data: {
-        name: name.trim(),
-        category: category.trim(),
+        name,
+        category,
         quantity_total: total,
         quantity_available: total,
-        location: location.trim(),
+        location,
         status: "WORKING",
       },
       select: {
@@ -95,6 +121,7 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("Error creating item:", error);
+
     return NextResponse.json(
       { error: "Failed to create item" },
       { status: 500 }
