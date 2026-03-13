@@ -25,15 +25,13 @@ import { useSession } from "next-auth/react";
 
 type Props = {
   items: Item[];
-  borrowingId: number | null;
-  onBorrow: (id: number) => void;
+  onBorrow: (item: Item) => void;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
 };
 
 export function DesktopInventoryTable({
   items,
-  borrowingId,
   onBorrow,
   onEdit,
   onDelete,
@@ -186,9 +184,8 @@ export function DesktopInventoryTable({
                   >
                     <Button
                       size="sm"
-                      loading={borrowingId === item.id}
                       disabled={unavailable}
-                      onClick={() => onBorrow(item.id)}
+                      onClick={() => onBorrow(item)}
                     >
                       {item.quantity_available === 0
                         ? "Out of Stock"

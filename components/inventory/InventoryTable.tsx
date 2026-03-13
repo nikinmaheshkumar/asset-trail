@@ -18,10 +18,10 @@ import {
   Divider,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconSearch, IconRefresh } from "@tabler/icons-react";
 import { DesktopInventoryTable } from "./DesktopInventoryTable";
 import { MobileInventoryCards } from "./MobileInventoryCards";
+import { RequestLoanModal } from "@/components/loans/RequestLoanModal";
 
 export type Item = {
   id: number
@@ -42,7 +42,7 @@ type Props = {
 export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const [borrowingId, setBorrowingId] = useState<number | null>(null);
+  const [borrowModalItem, setBorrowModalItem] = useState<Item | null>(null);
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -68,11 +68,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
 
       setItems(sorted);
     } catch {
-      notifications.show({
-        color: "red",
-        title: "Error",
-        message: "Failed to fetch items",
-      });
+      // silent fail — table will show empty
     } finally {
       setLoading(false);
     }
@@ -82,38 +78,8 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
     fetchItems();
   }, [refreshKey]);
 
-  async function handleBorrow(itemId: number) {
-    setBorrowingId(itemId);
-
-    try {
-      const res = await fetch("/api/loans", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          item_id: itemId,
-          member_id: 4,
-          due_date: new Date(Date.now() + 7 * 86400000),
-        }),
-      });
-
-      if (!res.ok) throw new Error();
-
-      notifications.show({
-        color: "green",
-        title: "Success",
-        message: "Item borrowed successfully",
-      });
-
-      fetchItems();
-    } catch {
-      notifications.show({
-        color: "red",
-        title: "Error",
-        message: "Borrow failed",
-      });
-    } finally {
-      setBorrowingId(null);
-    }
+  function handleBorrow(item: Item) {
+    setBorrowModalItem(item);
   }
 
   const filteredItems = useMemo(() => {
@@ -254,7 +220,6 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
       ) : isMobile ? (
         <MobileInventoryCards
           items={paginatedItems}
-          borrowingId={borrowingId}
           onBorrow={handleBorrow}
           onEdit={onEdit}
           onDelete={onDelete}
@@ -262,12 +227,22 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
       ) : (
         <DesktopInventoryTable
           items={paginatedItems}
-          borrowingId={borrowingId}
           onBorrow={handleBorrow}
           onEdit={onEdit}
           onDelete={onDelete}
         />
       )}
+
+      {/* Request Loan Modal */}
+      <RequestLoanModal
+        opened={borrowModalItem !== null}
+        item={borrowModalItem}
+        onClose={() => setBorrowModalItem(null)}
+        onRequested={() => {
+          setBorrowModalItem(null);
+          fetchItems();
+        }}
+      />
 
       {/* PAGINATION */}
       {totalPages > 1 && (
