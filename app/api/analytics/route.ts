@@ -12,31 +12,63 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    // Run all independent queries in parallel
     const [
       totalItems,
       activeLoans,
       pendingRequests,
       lowStockItems,
-    ] = await prisma.$transaction([
+      mostBorrowed,
+      recentLoans,
+      userStats,
+    ] = await Promise.all([
       prisma.item.count(),
       prisma.loan.count({ where: { status: "APPROVED" } }),
       prisma.loan.count({ where: { status: "REQUESTED" } }),
       prisma.item.count({ where: { quantity_available: { lte: 2 } } }),
+      prisma.loan.groupBy({
+        by: ["item_id"],
+        _count: { item_id: true },
+        orderBy: { _count: { item_id: "desc" } },
+        take: 5,
+      }),
+      prisma.loan.findMany({
+        where: { requested_at: { gte: sixMonthsAgo } },
+        select: { requested_at: true },
+      }),
+      prisma.loan.groupBy({
+        by: ["member_id"],
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 10,
+      }),
     ]);
 
-    // Most borrowed assets (top 5)
-    const mostBorrowed = await prisma.loan.groupBy({
-      by: ["item_id"],
-      _count: { item_id: true },
-      orderBy: { _count: { item_id: "desc" } },
-      take: 5,
-    });
-
     const mostBorrowedItemIds = mostBorrowed.map((m: { item_id: number }) => m.item_id);
-    const mostBorrowedItems = await prisma.item.findMany({
-      where: { id: { in: mostBorrowedItemIds } },
-      select: { id: true, name: true, category: true },
-    });
+    const userIds = userStats.map((u: { member_id: number }) => u.member_id);
+
+    // Resolve item names, member names, and active-loan counts in parallel
+    const [mostBorrowedItems, members, activeUserLoans] = await Promise.all([
+      prisma.item.findMany({
+        where: { id: { in: mostBorrowedItemIds } },
+        select: { id: true, name: true, category: true },
+      }),
+      prisma.member.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true, role: true },
+      }),
+      prisma.loan.groupBy({
+        by: ["member_id"],
+        where: { status: "APPROVED", member_id: { in: userIds } },
+        _count: { id: true },
+      }),
+    ]);
+
     const itemMap = Object.fromEntries(
       mostBorrowedItems.map((i: { id: number; name: string; category: string }) => [i.id, i]),
     );
@@ -45,17 +77,7 @@ export async function GET(req: Request) {
       count: m._count.item_id,
     }));
 
-    // Monthly loan activity (last 6 months, inclusive of current month)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    sixMonthsAgo.setDate(1);
-    sixMonthsAgo.setHours(0, 0, 0, 0);
-
-    const recentLoans = await prisma.loan.findMany({
-      where: { requested_at: { gte: sixMonthsAgo } },
-      select: { requested_at: true },
-    });
-
+    // Monthly activity
     const monthlyMap: Record<string, number> = {};
     for (const loan of recentLoans) {
       const key = loan.requested_at.toISOString().slice(0, 7); // "YYYY-MM"
@@ -65,30 +87,10 @@ export async function GET(req: Request) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, count]) => ({ month, count }));
 
-    // User borrow statistics (top 10)
-    const userStats = await prisma.loan.groupBy({
-      by: ["member_id"],
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-      take: 10,
-    });
-
-    const userIds = userStats.map((u: { member_id: number }) => u.member_id);
-    const members = await prisma.member.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, name: true, email: true, role: true },
-    });
     const memberMap = Object.fromEntries(members.map((m: { id: number; name: string; email: string; role: string | null }) => [m.id, m]));
-
-    const activeUserLoans = await prisma.loan.groupBy({
-      by: ["member_id"],
-      where: { status: "APPROVED", member_id: { in: userIds } },
-      _count: { id: true },
-    });
     const activeMap = Object.fromEntries(
       activeUserLoans.map((u: { member_id: number; _count: { id: number } }) => [u.member_id, u._count.id]),
     );
-
     const userBorrowStats = userStats.map((u: { member_id: number; _count: { id: number } }) => ({
       member: memberMap[u.member_id] ?? { id: u.member_id, name: "Unknown", email: "", role: null },
       totalLoans: u._count.id,

@@ -41,7 +41,8 @@ export async function PATCH(
       );
     }
 
-    if (existingLoan.approved_by !== adminId) {
+    const isMasterAdmin = session.user.role === "MASTER_ADMIN";
+    if (!isMasterAdmin && existingLoan.approved_by !== adminId) {
       return NextResponse.json(
         { error: "Only the approving admin can close this loan" },
         { status: 403 },

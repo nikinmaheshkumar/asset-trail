@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     const actionFilter = searchParams.get("action") ?? "";
     const skip = (page - 1) * perPage;
 
-    // For search on actor name/email we need to join — fetch matching member IDs first
+    // Resolve actor name/email search before building the where clause
     let actorIdFilter: number[] | undefined;
     if (search) {
       const matchingMembers = await prisma.member.findMany({
@@ -39,7 +39,8 @@ export async function GET(req: Request) {
       ...(actorIdFilter !== undefined ? { actor_id: { in: actorIdFilter } } : {}),
     };
 
-    const [logs, total] = await prisma.$transaction([
+    // Fetch logs + count in parallel
+    const [logs, total] = await Promise.all([
       prisma.activityLog.findMany({
         where: whereClause,
         orderBy: { created_at: "desc" },
@@ -49,12 +50,14 @@ export async function GET(req: Request) {
       prisma.activityLog.count({ where: whereClause }),
     ]);
 
-    // Enrich with actor names
+    // Enrich with actor details (single lookup, skip if no logs)
     const actorIds = [...new Set(logs.map((l: { actor_id: number }) => l.actor_id))];
-    const members = await prisma.member.findMany({
-      where: { id: { in: actorIds } },
-      select: { id: true, name: true, email: true },
-    });
+    const members = actorIds.length
+      ? await prisma.member.findMany({
+          where: { id: { in: actorIds } },
+          select: { id: true, name: true, email: true },
+        })
+      : [];
     const memberMap = Object.fromEntries(members.map((m: { id: number; name: string; email: string }) => [m.id, m]));
 
     const enriched = logs.map((log: { actor_id: number; [key: string]: unknown }) => ({

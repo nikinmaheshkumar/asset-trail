@@ -37,11 +37,35 @@ export async function POST(req: Request) {
       ? `${purpose}\n\nNotes: ${notes}`
       : purpose;
 
-    // Check item exists and is available
-    const item = await prisma.item.findUnique({
-      where: { id: Number(item_id) },
-      select: { id: true, quantity_available: true, status: true },
-    });
+    // Run all validation checks in parallel for better performance
+    const [item, duplicate, activeCount, overdueLoan] = await Promise.all([
+      prisma.item.findUnique({
+        where: { id: Number(item_id) },
+        select: { id: true, quantity_available: true, status: true },
+      }),
+      prisma.loan.findFirst({
+        where: {
+          member_id: memberId,
+          item_id: Number(item_id),
+          status: { in: ["REQUESTED", "APPROVED"] },
+        },
+        select: { id: true },
+      }),
+      prisma.loan.count({
+        where: {
+          member_id: memberId,
+          status: { in: ["REQUESTED", "APPROVED"] },
+        },
+      }),
+      prisma.loan.findFirst({
+        where: {
+          member_id: memberId,
+          status: "APPROVED",
+          due_date: { lt: new Date() },
+        },
+        select: { id: true },
+      }),
+    ]);
 
     if (!item) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
@@ -62,14 +86,6 @@ export async function POST(req: Request) {
     }
 
     // Check for duplicate active loan (REQUESTED or APPROVED)
-    const duplicate = await prisma.loan.findFirst({
-      where: {
-        member_id: memberId,
-        item_id: Number(item_id),
-        status: { in: ["REQUESTED", "APPROVED"] },
-      },
-    });
-
     if (duplicate) {
       return NextResponse.json(
         { error: "You already have an active request or loan for this item" },
@@ -78,13 +94,6 @@ export async function POST(req: Request) {
     }
 
     // Check borrow limit
-    const activeCount = await prisma.loan.count({
-      where: {
-        member_id: memberId,
-        status: { in: ["REQUESTED", "APPROVED"] },
-      },
-    });
-
     const limit = BORROW_LIMITS[role] ?? 2;
     if (activeCount >= limit) {
       return NextResponse.json(
@@ -94,14 +103,6 @@ export async function POST(req: Request) {
     }
 
     // Check for overdue loans (APPROVED and past due_date)
-    const overdueLoan = await prisma.loan.findFirst({
-      where: {
-        member_id: memberId,
-        status: "APPROVED",
-        due_date: { lt: new Date() },
-      },
-    });
-
     if (overdueLoan) {
       return NextResponse.json(
         { error: "You have an overdue loan. Please return the item before requesting a new one." },

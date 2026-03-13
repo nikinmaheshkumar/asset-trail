@@ -61,6 +61,7 @@ const ITEMS_PER_PAGE = 8;
 export function AdminActiveLoansTable() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const isMasterAdmin = session?.user?.role === "MASTER_ADMIN";
 
   const [loans, setLoans] = useState<ActiveLoan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -230,7 +231,7 @@ export function AdminActiveLoansTable() {
                 </Text>
               )}
               <Text size="xs" c="dimmed">Approved by: {loan.approver?.name ?? "—"}</Text>
-              {loan.approved_by === currentUserId && (
+              {(isMasterAdmin || loan.approved_by === currentUserId) && (
                 <Button
                   size="xs"
                   color="blue"
@@ -297,7 +298,7 @@ export function AdminActiveLoansTable() {
                       )}
                     </Table.Td>
                     <Table.Td>
-                      {loan.approved_by === currentUserId ? (
+                      {(isMasterAdmin || loan.approved_by === currentUserId) ? (
                         <Tooltip label="Close Loan">
                           <ActionIcon
                             color="blue"
