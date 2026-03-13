@@ -45,9 +45,9 @@ export async function GET(req: Request) {
       count: m._count.item_id,
     }));
 
-    // Monthly loan activity (last 6 months)
+    // Monthly loan activity (last 6 months, inclusive of current month)
     const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
     sixMonthsAgo.setDate(1);
     sixMonthsAgo.setHours(0, 0, 0, 0);
 
@@ -90,7 +90,7 @@ export async function GET(req: Request) {
     );
 
     const userBorrowStats = userStats.map((u) => ({
-      member: memberMap[u.member_id] ?? { id: u.member_id, name: "Unknown", email: "", role: "JUNIOR_CORE" },
+      member: memberMap[u.member_id] ?? { id: u.member_id, name: "Unknown", email: "", role: null },
       totalLoans: u._count.id,
       activeLoans: activeMap[u.member_id] ?? 0,
     }));
