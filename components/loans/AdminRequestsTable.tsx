@@ -6,7 +6,10 @@ import {
   Paper,
   Title,
   Group,
+  Button,
   TextInput,
+  Select,
+  SimpleGrid,
   Pagination,
   Divider,
   Text,
@@ -14,14 +17,26 @@ import {
   Table,
   Badge,
   Card,
-  SimpleGrid,
-  Button,
+  Loader,
+  ScrollArea,
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconSearch, IconRefresh, IconCheck, IconX } from "@tabler/icons-react";
+import {
+  IconSearch,
+  IconRefresh,
+  IconCheck,
+  IconX,
+  IconBox,
+  IconUser,
+  IconShield,
+  IconCalendar,
+  IconNotes,
+  IconSettings,
+  IconHash,
+} from "@tabler/icons-react";
 
 type LoanRequest = {
   id: number;
@@ -37,7 +52,7 @@ type LoanRequest = {
 const roleColors: Record<string, string> = {
   MASTER_ADMIN: "red",
   BOARD: "blue",
-  SENIOR_CORE: "yellow",
+  SENIOR_CORE: "yellow.7",
   JUNIOR_CORE: "gray",
 };
 
@@ -54,6 +69,7 @@ export function AdminRequestsTable() {
   const [requests, setRequests] = useState<LoanRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
@@ -113,11 +129,17 @@ export function AdminRequestsTable() {
   }
 
   const filtered = useMemo(() => {
-    return requests.filter((r) =>
-      r.item.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.member.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [requests, search]);
+    return requests.filter((r) => {
+      const matchSearch =
+        r.item.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.member.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.member.email.toLowerCase().includes(search.toLowerCase());
+      const matchRole = roleFilter ? r.member.role === roleFilter : true;
+      return matchSearch && matchRole;
+    });
+  }, [requests, search, roleFilter]);
+
+  useEffect(() => { setPage(1); }, [search, roleFilter]);
 
   const paginated = useMemo(() => {
     const start = (page - 1) * ITEMS_PER_PAGE;
@@ -125,148 +147,204 @@ export function AdminRequestsTable() {
   }, [filtered, page]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startItem = filtered.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(page * ITEMS_PER_PAGE, filtered.length);
+
+  const filtersActive = search || roleFilter;
+
+  const handleReset = () => {
+    setSearch("");
+    setRoleFilter(null);
+    setPage(1);
+  };
+
+  if (loading) {
+    return (
+      <Center py="xl">
+        <Loader size="lg" />
+      </Center>
+    );
+  }
 
   return (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Group justify="space-between">
-            <Title order={5}>Pending Requests</Title>
-            <Button
-              variant="subtle"
-              size="xs"
-              leftSection={<IconRefresh size={14} />}
-              onClick={() => { setSearch(""); setPage(1); fetchRequests(); }}
-            >
-              Refresh
-            </Button>
-          </Group>
-
+    <Stack gap="xl">
+      {/* FILTER PANEL */}
+      <Paper withBorder radius="md" p="md" shadow="xs">
+        <Group justify="space-between" mb="md">
+          <Title order={5} fw={800}>Filters</Title>
+          <Button
+            variant="light"
+            size="sm"
+            leftSection={<IconRefresh size={16} />}
+            onClick={() => { handleReset(); fetchRequests(); }}
+            disabled={!filtersActive}
+          >
+            Reset
+          </Button>
+        </Group>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
           <TextInput
+            label="Search"
             placeholder="Search by item or member..."
-            leftSection={<IconSearch size={14} />}
+            leftSection={<IconSearch size={16} />}
+            size="sm"
             value={search}
-            onChange={(e) => { setSearch(e.currentTarget.value); setPage(1); }}
+            onChange={(e) => setSearch(e.currentTarget.value)}
           />
-          <Divider />
-
-          {loading ? (
-            <Center py="xl"><Text c="dimmed">Loading...</Text></Center>
-          ) : filtered.length === 0 ? (
-            <Center py="xl"><Text c="dimmed">No pending requests</Text></Center>
-          ) : isMobile ? (
-            <SimpleGrid cols={1} spacing="sm">
-              {paginated.map((req) => (
-                <Card key={req.id} withBorder radius="md" p="sm">
-                  <Stack gap={4}>
-                    <Group justify="space-between">
-                      <Text fw={600} size="sm">{req.item.name}</Text>
-                      <Badge color={roleColors[req.member.role] ?? "gray"} size="sm" variant="light">
-                        {roleLabels[req.member.role] ?? req.member.role}
-                      </Badge>
-                    </Group>
-                    <Text size="xs" c="dimmed">{req.member.name} · {req.member.email}</Text>
-                    <Text size="xs">Requested: {new Date(req.requested_at).toLocaleDateString()}</Text>
-                    <Text size="xs" c="dimmed">Purpose: {req.purpose}</Text>
-                    <Group gap="xs" mt={4}>
-                      <Button
-                        size="xs"
-                        color="green"
-                        leftSection={<IconCheck size={12} />}
-                        loading={actionLoading === req.id}
-                        onClick={() => handleApprove(req.id)}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="xs"
-                        color="red"
-                        variant="light"
-                        leftSection={<IconX size={12} />}
-                        loading={actionLoading === req.id}
-                        onClick={() => handleReject(req.id)}
-                      >
-                        Reject
-                      </Button>
-                    </Group>
-                  </Stack>
-                </Card>
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Item</Table.Th>
-                  <Table.Th>Requested By</Table.Th>
-                  <Table.Th>Role</Table.Th>
-                  <Table.Th>Requested At</Table.Th>
-                  <Table.Th>Purpose</Table.Th>
-                  <Table.Th>Actions</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {paginated.map((req) => (
-                  <Table.Tr key={req.id}>
-                    <Table.Td fw={500}>{req.item.name}</Table.Td>
-                    <Table.Td>
-                      <Stack gap={2}>
-                        <Text size="sm">{req.member.name}</Text>
-                        <Text size="xs" c="dimmed">{req.member.email}</Text>
-                      </Stack>
-                    </Table.Td>
-                    <Table.Td>
-                      <Badge color={roleColors[req.member.role] ?? "gray"} variant="light" size="sm">
-                        {roleLabels[req.member.role] ?? req.member.role}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td>{new Date(req.requested_at).toLocaleDateString()}</Table.Td>
-                    <Table.Td><Text size="sm" c="dimmed">{req.purpose}</Text></Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Tooltip label="Approve">
-                          <ActionIcon
-                            color="green"
-                            variant="light"
-                            size="sm"
-                            loading={actionLoading === req.id}
-                            onClick={() => handleApprove(req.id)}
-                          >
-                            <IconCheck size={14} />
-                          </ActionIcon>
-                        </Tooltip>
-                        <Tooltip label="Reject">
-                          <ActionIcon
-                            color="red"
-                            variant="light"
-                            size="sm"
-                            loading={actionLoading === req.id}
-                            onClick={() => handleReject(req.id)}
-                          >
-                            <IconX size={14} />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
-
-          {totalPages > 1 && (
-            <>
-              <Divider />
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
-                </Text>
-                <Pagination total={totalPages} value={page} onChange={setPage} size="sm" />
-              </Group>
-            </>
-          )}
-        </Stack>
+          <Select
+            label="Role"
+            placeholder="All"
+            clearable
+            size="sm"
+            data={[
+              { value: "MASTER_ADMIN", label: "Master Admin" },
+              { value: "BOARD", label: "Board" },
+              { value: "SENIOR_CORE", label: "Senior Core" },
+              { value: "JUNIOR_CORE", label: "Junior Core" },
+            ]}
+            value={roleFilter}
+            onChange={setRoleFilter}
+          />
+        </SimpleGrid>
       </Paper>
+
+      {/* TABLE OR MOBILE CARDS */}
+      {filtered.length === 0 ? (
+        <Center py="lg">
+          <Text c="dimmed">No pending requests match your filters</Text>
+        </Center>
+      ) : isMobile ? (
+        <Stack gap="md">
+          {paginated.map((req) => (
+            <Card key={req.id} withBorder radius="md" p="md">
+              <Group justify="space-between" mb="xs">
+                <Text fw={700}>{req.item.name}</Text>
+                <Badge color={roleColors[req.member.role] ?? "gray"} variant="light">
+                  {roleLabels[req.member.role] ?? req.member.role}
+                </Badge>
+              </Group>
+              <Text size="sm" fw={500}>{req.member.name}</Text>
+              <Text size="sm" c="dimmed" mb="xs">{req.member.email}</Text>
+              <Text size="xs" c="dimmed">
+                Requested: {new Date(req.requested_at).toLocaleDateString()}
+              </Text>
+              {req.purpose && (
+                <Text size="xs" c="dimmed">Purpose: {req.purpose}</Text>
+              )}
+              <Group gap="xs" mt="sm">
+                <Button
+                  size="xs"
+                  color="green"
+                  leftSection={<IconCheck size={12} />}
+                  loading={actionLoading === req.id}
+                  onClick={() => handleApprove(req.id)}
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="xs"
+                  color="red"
+                  variant="light"
+                  leftSection={<IconX size={12} />}
+                  loading={actionLoading === req.id}
+                  onClick={() => handleReject(req.id)}
+                >
+                  Reject
+                </Button>
+              </Group>
+            </Card>
+          ))}
+        </Stack>
+      ) : (
+        <ScrollArea>
+          <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
+            <Table.Thead style={{ background: "#f8f9fa" }}>
+              <Table.Tr>
+                <Table.Th><Group gap={6}><IconHash size={16} /></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconBox size={16} /><Text fw={800}>Item</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconUser size={16} /><Text fw={800}>Requested By</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconShield size={16} /><Text fw={800}>Role</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconCalendar size={16} /><Text fw={800}>Requested At</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconNotes size={16} /><Text fw={800}>Purpose</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconSettings size={16} /><Text fw={800}>Actions</Text></Group></Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {paginated.map((req, idx) => (
+                <Table.Tr key={req.id}>
+                  <Table.Td><Text fw={600}>{(page - 1) * ITEMS_PER_PAGE + idx + 1}</Text></Table.Td>
+                  <Table.Td>
+                    <Stack gap={2}>
+                      <Text fw={700}>{req.item.name}</Text>
+                      <Badge variant="light" size="sm">{req.item.category}</Badge>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack gap={2}>
+                      <Text fw={600} size="sm">{req.member.name}</Text>
+                      <Text size="xs" c="dimmed">{req.member.email}</Text>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge color={roleColors[req.member.role] ?? "gray"} variant="light" fw={600}>
+                      {roleLabels[req.member.role] ?? req.member.role}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>{new Date(req.requested_at).toLocaleDateString()}</Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">{req.purpose || "—"}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <Tooltip label="Approve">
+                        <ActionIcon
+                          color="green"
+                          variant="light"
+                          loading={actionLoading === req.id}
+                          onClick={() => handleApprove(req.id)}
+                        >
+                          <IconCheck size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Reject">
+                        <ActionIcon
+                          color="red"
+                          variant="light"
+                          loading={actionLoading === req.id}
+                          onClick={() => handleReject(req.id)}
+                        >
+                          <IconX size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
+      )}
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <>
+          <Divider />
+          <Group justify="space-between" align="center">
+            <Text size="sm" fw={500}>
+              Showing {startItem}–{endItem} of {filtered.length}
+            </Text>
+            <Group gap="xs" align="center">
+              <Button size="sm" variant="default" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Prev
+              </Button>
+              <Pagination value={page} onChange={setPage} total={totalPages} size="md" radius="md" withControls={false} />
+              <Button size="sm" variant="default" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                Next
+              </Button>
+            </Group>
+          </Group>
+        </>
+      )}
     </Stack>
   );
 }

@@ -15,18 +15,41 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const page = Number(searchParams.get("page") ?? "1");
     const perPage = Number(searchParams.get("per_page") ?? "20");
+    const search = searchParams.get("search") ?? "";
+    const actionFilter = searchParams.get("action") ?? "";
     const skip = (page - 1) * perPage;
+
+    // For search on actor name/email we need to join — fetch matching member IDs first
+    let actorIdFilter: number[] | undefined;
+    if (search) {
+      const matchingMembers = await prisma.member.findMany({
+        where: {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+          ],
+        },
+        select: { id: true },
+      });
+      actorIdFilter = matchingMembers.map((m) => m.id);
+    }
+
+    const whereClause = {
+      ...(actionFilter ? { action: actionFilter } : {}),
+      ...(actorIdFilter !== undefined ? { actor_id: { in: actorIdFilter } } : {}),
+    };
 
     const [logs, total] = await prisma.$transaction([
       prisma.activityLog.findMany({
+        where: whereClause,
         orderBy: { created_at: "desc" },
         skip,
         take: perPage,
       }),
-      prisma.activityLog.count(),
+      prisma.activityLog.count({ where: whereClause }),
     ]);
 
-    // Enrich with actor/target names by fetching members
+    // Enrich with actor names
     const actorIds = [...new Set(logs.map((l) => l.actor_id))];
     const members = await prisma.member.findMany({
       where: { id: { in: actorIds } },

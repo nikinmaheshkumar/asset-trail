@@ -6,7 +6,11 @@ import {
   Paper,
   Title,
   Group,
+  Button,
   TextInput,
+  Select,
+  SimpleGrid,
+  Switch,
   Pagination,
   Divider,
   Text,
@@ -14,15 +18,27 @@ import {
   Table,
   Badge,
   Card,
-  SimpleGrid,
-  Button,
+  Loader,
+  ScrollArea,
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useSession } from "next-auth/react";
 import { notifications } from "@mantine/notifications";
-import { IconSearch, IconRefresh, IconLock } from "@tabler/icons-react";
+import {
+  IconSearch,
+  IconRefresh,
+  IconLock,
+  IconBox,
+  IconUser,
+  IconUserCheck,
+  IconCalendar,
+  IconCalendarDue,
+  IconSettings,
+  IconHash,
+  IconAlertTriangle,
+} from "@tabler/icons-react";
 
 type ActiveLoan = {
   id: number;
@@ -48,6 +64,8 @@ export function AdminActiveLoansTable() {
   const [loans, setLoans] = useState<ActiveLoan[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const [approverFilter, setApproverFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [closingId, setClosingId] = useState<number | null>(null);
 
@@ -88,12 +106,32 @@ export function AdminActiveLoansTable() {
     }
   }
 
+  const isOverdue = (dueDate?: string) => dueDate && new Date(dueDate) < new Date();
+
+  // Build approver options for filter
+  const approverOptions = useMemo(() => {
+    const map = new Map<number, string>();
+    loans.forEach((l) => {
+      if (l.approver) map.set(l.approver.id, l.approver.name);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ value: String(id), label: name }));
+  }, [loans]);
+
   const filtered = useMemo(() => {
-    return loans.filter((l) =>
-      l.item.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.member.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [loans, search]);
+    return loans.filter((l) => {
+      const matchSearch =
+        l.item.name.toLowerCase().includes(search.toLowerCase()) ||
+        l.member.name.toLowerCase().includes(search.toLowerCase()) ||
+        l.member.email.toLowerCase().includes(search.toLowerCase());
+      const matchOverdue = overdueOnly ? isOverdue(l.due_date) : true;
+      const matchApprover = approverFilter
+        ? l.approved_by === Number(approverFilter)
+        : true;
+      return matchSearch && matchOverdue && matchApprover;
+    });
+  }, [loans, search, overdueOnly, approverFilter]);
+
+  useEffect(() => { setPage(1); }, [search, overdueOnly, approverFilter]);
 
   const paginated = useMemo(() => {
     const start = (page - 1) * ITEMS_PER_PAGE;
@@ -101,90 +139,139 @@ export function AdminActiveLoansTable() {
   }, [filtered, page]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startItem = filtered.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(page * ITEMS_PER_PAGE, filtered.length);
 
-  const isOverdue = (dueDate?: string) => dueDate && new Date(dueDate) < new Date();
+  const filtersActive = search || overdueOnly || approverFilter;
+
+  const handleReset = () => {
+    setSearch("");
+    setOverdueOnly(false);
+    setApproverFilter(null);
+    setPage(1);
+  };
+
+  if (loading) {
+    return (
+      <Center py="xl">
+        <Loader size="lg" />
+      </Center>
+    );
+  }
 
   return (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Group justify="space-between">
-            <Title order={5}>Active Loans</Title>
-            <Button
-              variant="subtle"
-              size="xs"
-              leftSection={<IconRefresh size={14} />}
-              onClick={() => { setSearch(""); setPage(1); fetchLoans(); }}
-            >
-              Refresh
-            </Button>
-          </Group>
-
+    <Stack gap="xl">
+      {/* FILTER PANEL */}
+      <Paper withBorder radius="md" p="md" shadow="xs">
+        <Group justify="space-between" mb="md">
+          <Title order={5} fw={800}>Filters</Title>
+          <Button
+            variant="light"
+            size="sm"
+            leftSection={<IconRefresh size={16} />}
+            onClick={() => { handleReset(); fetchLoans(); }}
+            disabled={!filtersActive}
+          >
+            Reset
+          </Button>
+        </Group>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
           <TextInput
-            placeholder="Search by item or member..."
-            leftSection={<IconSearch size={14} />}
+            label="Search"
+            placeholder="Search by item or borrower..."
+            leftSection={<IconSearch size={16} />}
+            size="sm"
             value={search}
-            onChange={(e) => { setSearch(e.currentTarget.value); setPage(1); }}
+            onChange={(e) => setSearch(e.currentTarget.value)}
           />
-          <Divider />
+          <Select
+            label="Approved By"
+            placeholder="All approvers"
+            clearable
+            size="sm"
+            data={approverOptions}
+            value={approverFilter}
+            onChange={setApproverFilter}
+          />
+          <Group align="flex-end">
+            <Switch
+              label="Overdue only"
+              checked={overdueOnly}
+              onChange={(e) => setOverdueOnly(e.currentTarget.checked)}
+            />
+          </Group>
+        </SimpleGrid>
+      </Paper>
 
-          {loading ? (
-            <Center py="xl"><Text c="dimmed">Loading...</Text></Center>
-          ) : filtered.length === 0 ? (
-            <Center py="xl"><Text c="dimmed">No active loans</Text></Center>
-          ) : isMobile ? (
-            <SimpleGrid cols={1} spacing="sm">
-              {paginated.map((loan) => (
-                <Card key={loan.id} withBorder radius="md" p="sm">
-                  <Stack gap={4}>
-                    <Group justify="space-between">
-                      <Text fw={600} size="sm">{loan.item.name}</Text>
-                      {isOverdue(loan.due_date) && (
-                        <Badge color="red" size="sm">Overdue</Badge>
-                      )}
-                    </Group>
-                    <Text size="xs" c="dimmed">{loan.member.name} · {loan.member.email}</Text>
-                    {loan.due_date && (
-                      <Text size="xs" c={isOverdue(loan.due_date) ? "red" : undefined}>
-                        Due: {new Date(loan.due_date).toLocaleDateString()}
-                      </Text>
-                    )}
-                    <Text size="xs" c="dimmed">Approved by: {loan.approver?.name ?? "—"}</Text>
-                    {loan.approved_by === currentUserId && (
-                      <Button
-                        size="xs"
-                        color="blue"
-                        leftSection={<IconLock size={12} />}
-                        loading={closingId === loan.id}
-                        onClick={() => handleClose(loan.id)}
-                        mt={4}
-                      >
-                        Close Loan
-                      </Button>
-                    )}
-                  </Stack>
-                </Card>
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Item</Table.Th>
-                  <Table.Th>Borrower</Table.Th>
-                  <Table.Th>Approved By</Table.Th>
-                  <Table.Th>Approved At</Table.Th>
-                  <Table.Th>Due Date</Table.Th>
-                  <Table.Th>Actions</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {paginated.map((loan) => (
+      {/* TABLE OR MOBILE CARDS */}
+      {filtered.length === 0 ? (
+        <Center py="lg">
+          <Text c="dimmed">No active loans match your filters</Text>
+        </Center>
+      ) : isMobile ? (
+        <Stack gap="md">
+          {paginated.map((loan) => (
+            <Card key={loan.id} withBorder radius="md" p="md">
+              <Group justify="space-between" mb="xs">
+                <Text fw={700}>{loan.item.name}</Text>
+                {isOverdue(loan.due_date) && (
+                  <Badge color="red" leftSection={<IconAlertTriangle size={10} />}>Overdue</Badge>
+                )}
+              </Group>
+              <Badge variant="light" mb="xs">{loan.item.category}</Badge>
+              <Text size="sm" fw={500}>{loan.member.name}</Text>
+              <Text size="sm" c="dimmed" mb="xs">{loan.member.email}</Text>
+              {loan.due_date && (
+                <Text size="sm" c={isOverdue(loan.due_date) ? "red" : "dimmed"}>
+                  Due: {new Date(loan.due_date).toLocaleDateString()}
+                </Text>
+              )}
+              <Text size="xs" c="dimmed">Approved by: {loan.approver?.name ?? "—"}</Text>
+              {loan.approved_by === currentUserId && (
+                <Button
+                  size="xs"
+                  color="blue"
+                  variant="light"
+                  leftSection={<IconLock size={12} />}
+                  loading={closingId === loan.id}
+                  onClick={() => handleClose(loan.id)}
+                  mt="sm"
+                >
+                  Close Loan
+                </Button>
+              )}
+            </Card>
+          ))}
+        </Stack>
+      ) : (
+        <ScrollArea>
+          <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
+            <Table.Thead style={{ background: "#f8f9fa" }}>
+              <Table.Tr>
+                <Table.Th><Group gap={6}><IconHash size={16} /></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconBox size={16} /><Text fw={800}>Item</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconUser size={16} /><Text fw={800}>Borrower</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconUserCheck size={16} /><Text fw={800}>Approved By</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconCalendar size={16} /><Text fw={800}>Approved At</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconCalendarDue size={16} /><Text fw={800}>Due Date</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconSettings size={16} /><Text fw={800}>Actions</Text></Group></Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {paginated.map((loan, idx) => {
+                const overdue = isOverdue(loan.due_date);
+                return (
                   <Table.Tr key={loan.id}>
-                    <Table.Td fw={500}>{loan.item.name}</Table.Td>
+                    <Table.Td><Text fw={600}>{(page - 1) * ITEMS_PER_PAGE + idx + 1}</Text></Table.Td>
                     <Table.Td>
                       <Stack gap={2}>
-                        <Text size="sm">{loan.member.name}</Text>
+                        <Text fw={700}>{loan.item.name}</Text>
+                        <Badge variant="light" size="sm">{loan.item.category}</Badge>
+                      </Stack>
+                    </Table.Td>
+                    <Table.Td>
+                      <Stack gap={2}>
+                        <Text fw={600} size="sm">{loan.member.name}</Text>
                         <Text size="xs" c="dimmed">{loan.member.email}</Text>
                       </Stack>
                     </Table.Td>
@@ -194,11 +281,17 @@ export function AdminActiveLoansTable() {
                     </Table.Td>
                     <Table.Td>
                       {loan.due_date ? (
-                        <Text size="sm" c={isOverdue(loan.due_date) ? "red" : undefined}>
-                          {new Date(loan.due_date).toLocaleDateString()}
-                          {isOverdue(loan.due_date) && " (overdue)"}
-                        </Text>
-                      ) : "—"}
+                        <Group gap="xs">
+                          <Text size="sm" c={overdue ? "red" : undefined} fw={overdue ? 700 : undefined}>
+                            {new Date(loan.due_date).toLocaleDateString()}
+                          </Text>
+                          {overdue && (
+                            <Badge color="red" size="xs" variant="light">Overdue</Badge>
+                          )}
+                        </Group>
+                      ) : (
+                        <Text c="dimmed">—</Text>
+                      )}
                     </Table.Td>
                     <Table.Td>
                       {loan.approved_by === currentUserId ? (
@@ -206,11 +299,10 @@ export function AdminActiveLoansTable() {
                           <ActionIcon
                             color="blue"
                             variant="light"
-                            size="sm"
                             loading={closingId === loan.id}
                             onClick={() => handleClose(loan.id)}
                           >
-                            <IconLock size={14} />
+                            <IconLock size={16} />
                           </ActionIcon>
                         </Tooltip>
                       ) : (
@@ -218,24 +310,33 @@ export function AdminActiveLoansTable() {
                       )}
                     </Table.Td>
                   </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
+      )}
 
-          {totalPages > 1 && (
-            <>
-              <Divider />
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
-                </Text>
-                <Pagination total={totalPages} value={page} onChange={setPage} size="sm" />
-              </Group>
-            </>
-          )}
-        </Stack>
-      </Paper>
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <>
+          <Divider />
+          <Group justify="space-between" align="center">
+            <Text size="sm" fw={500}>
+              Showing {startItem}–{endItem} of {filtered.length}
+            </Text>
+            <Group gap="xs" align="center">
+              <Button size="sm" variant="default" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Prev
+              </Button>
+              <Pagination value={page} onChange={setPage} total={totalPages} size="md" radius="md" withControls={false} />
+              <Button size="sm" variant="default" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                Next
+              </Button>
+            </Group>
+          </Group>
+        </>
+      )}
     </Stack>
   );
 }

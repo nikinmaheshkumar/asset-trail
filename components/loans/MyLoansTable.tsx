@@ -6,8 +6,10 @@ import {
   Paper,
   Title,
   Group,
+  Button,
   TextInput,
   Select,
+  SimpleGrid,
   Pagination,
   Divider,
   Text,
@@ -15,12 +17,21 @@ import {
   Table,
   Badge,
   Card,
-  SimpleGrid,
+  Loader,
+  ScrollArea,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconSearch, IconRefresh } from "@tabler/icons-react";
-import { Button } from "@mantine/core";
+import {
+  IconSearch,
+  IconRefresh,
+  IconBox,
+  IconCategory,
+  IconActivityHeartbeat,
+  IconCalendar,
+  IconCalendarDue,
+  IconHash,
+} from "@tabler/icons-react";
 
 type LoanStatus = "REQUESTED" | "APPROVED" | "CLOSED" | "REJECTED";
 
@@ -81,11 +92,15 @@ export function MyLoansTable() {
 
   const filtered = useMemo(() => {
     return loans.filter((l) => {
-      const matchSearch = l.item.name.toLowerCase().includes(search.toLowerCase());
+      const matchSearch =
+        l.item.name.toLowerCase().includes(search.toLowerCase()) ||
+        l.item.category.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter ? l.status === statusFilter : true;
       return matchSearch && matchStatus;
     });
   }, [loans, search, statusFilter]);
+
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
 
   const paginated = useMemo(() => {
     const start = (page - 1) * ITEMS_PER_PAGE;
@@ -93,6 +108,10 @@ export function MyLoansTable() {
   }, [filtered, page]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startItem = filtered.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(page * ITEMS_PER_PAGE, filtered.length);
+
+  const filtersActive = search || statusFilter;
 
   const handleReset = () => {
     setSearch("");
@@ -100,85 +119,128 @@ export function MyLoansTable() {
     setPage(1);
   };
 
-  return (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Group justify="space-between">
-            <Title order={5}>My Loans</Title>
-            <Button
-              variant="subtle"
-              size="xs"
-              leftSection={<IconRefresh size={14} />}
-              onClick={() => { handleReset(); fetchLoans(); }}
-            >
-              Refresh
-            </Button>
-          </Group>
-          <Group gap="sm" wrap="wrap">
-            <TextInput
-              placeholder="Search by item name..."
-              leftSection={<IconSearch size={14} />}
-              value={search}
-              onChange={(e) => { setSearch(e.currentTarget.value); setPage(1); }}
-              style={{ flex: 1, minWidth: 180 }}
-            />
-            <Select
-              placeholder="Filter by status"
-              clearable
-              data={[
-                { value: "REQUESTED", label: "Requested" },
-                { value: "APPROVED", label: "Approved" },
-                { value: "CLOSED", label: "Closed" },
-                { value: "REJECTED", label: "Rejected" },
-              ]}
-              value={statusFilter}
-              onChange={(v) => { setStatusFilter(v); setPage(1); }}
-              style={{ minWidth: 160 }}
-            />
-          </Group>
-          <Divider />
+  if (loading) {
+    return (
+      <Center py="xl">
+        <Loader size="lg" />
+      </Center>
+    );
+  }
 
-          {loading ? (
-            <Center py="xl"><Text c="dimmed">Loading...</Text></Center>
-          ) : filtered.length === 0 ? (
-            <Center py="xl"><Text c="dimmed">No loans found</Text></Center>
-          ) : isMobile ? (
-            <SimpleGrid cols={1} spacing="sm">
-              {paginated.map((loan) => (
-                <Card key={loan.id} withBorder radius="md" p="sm">
-                  <Stack gap={4}>
-                    <Group justify="space-between">
-                      <Text fw={600} size="sm">{loan.item.name}</Text>
-                      <Badge color={statusColors[loan.status]} size="sm">
-                        {statusLabels[loan.status]}
-                      </Badge>
-                    </Group>
-                    <Text size="xs" c="dimmed">{loan.item.category}</Text>
-                    <Text size="xs">Requested: {new Date(loan.requested_at).toLocaleDateString()}</Text>
-                    {loan.due_date && (
-                      <Text size="xs">Due: {new Date(loan.due_date).toLocaleDateString()}</Text>
-                    )}
-                  </Stack>
-                </Card>
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Item</Table.Th>
-                  <Table.Th>Category</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                  <Table.Th>Requested At</Table.Th>
-                  <Table.Th>Due Date</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {paginated.map((loan) => (
+  return (
+    <Stack gap="xl">
+      {/* FILTER PANEL */}
+      <Paper withBorder radius="md" p="md" shadow="xs">
+        <Group justify="space-between" mb="md">
+          <Title order={5} fw={800}>Filters</Title>
+          <Button
+            variant="light"
+            size="sm"
+            leftSection={<IconRefresh size={16} />}
+            onClick={handleReset}
+            disabled={!filtersActive}
+          >
+            Reset
+          </Button>
+        </Group>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
+          <TextInput
+            label="Search"
+            placeholder="Search by item or category..."
+            leftSection={<IconSearch size={16} />}
+            size="sm"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+          <Select
+            label="Status"
+            placeholder="All"
+            clearable
+            size="sm"
+            data={[
+              { value: "REQUESTED", label: "Requested" },
+              { value: "APPROVED", label: "Approved" },
+              { value: "CLOSED", label: "Closed" },
+              { value: "REJECTED", label: "Rejected" },
+            ]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+        </SimpleGrid>
+      </Paper>
+
+      {/* TABLE OR MOBILE CARDS */}
+      {filtered.length === 0 ? (
+        <Center py="lg">
+          <Text c="dimmed">No loans match your filters</Text>
+        </Center>
+      ) : isMobile ? (
+        <Stack gap="md">
+          {paginated.map((loan) => (
+            <Card key={loan.id} withBorder radius="md" p="md">
+              <Group justify="space-between" mb="xs">
+                <Text fw={700}>{loan.item.name}</Text>
+                <Badge color={statusColors[loan.status]} variant="light">
+                  {statusLabels[loan.status]}
+                </Badge>
+              </Group>
+              <Badge variant="light" mb="xs">{loan.item.category}</Badge>
+              <Text size="sm" c="dimmed">
+                Requested: {new Date(loan.requested_at).toLocaleDateString()}
+              </Text>
+              {loan.due_date && (
+                <Text
+                  size="sm"
+                  c={loan.status === "APPROVED" && new Date(loan.due_date) < new Date() ? "red" : "dimmed"}
+                >
+                  Due: {new Date(loan.due_date).toLocaleDateString()}
+                </Text>
+              )}
+            </Card>
+          ))}
+        </Stack>
+      ) : (
+        <ScrollArea>
+          <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
+            <Table.Thead style={{ background: "#f8f9fa" }}>
+              <Table.Tr>
+                <Table.Th>
+                  <Group gap={6}><IconHash size={16} /></Group>
+                </Table.Th>
+                <Table.Th>
+                  <Group gap={6}><IconBox size={16} /><Text fw={800}>Item</Text></Group>
+                </Table.Th>
+                <Table.Th>
+                  <Group gap={6}><IconCategory size={16} /><Text fw={800}>Category</Text></Group>
+                </Table.Th>
+                <Table.Th>
+                  <Group gap={6}><IconActivityHeartbeat size={16} /><Text fw={800}>Status</Text></Group>
+                </Table.Th>
+                <Table.Th>
+                  <Group gap={6}><IconCalendar size={16} /><Text fw={800}>Requested At</Text></Group>
+                </Table.Th>
+                <Table.Th>
+                  <Group gap={6}><IconCalendarDue size={16} /><Text fw={800}>Due Date</Text></Group>
+                </Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {paginated.map((loan, idx) => {
+                const overdue =
+                  loan.status === "APPROVED" &&
+                  loan.due_date &&
+                  new Date(loan.due_date) < new Date();
+                return (
                   <Table.Tr key={loan.id}>
-                    <Table.Td fw={500}>{loan.item.name}</Table.Td>
-                    <Table.Td c="dimmed">{loan.item.category}</Table.Td>
+                    <Table.Td>
+                      <Text fw={600}>{(page - 1) * ITEMS_PER_PAGE + idx + 1}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text fw={700}>{loan.item.name}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Badge variant="light">{loan.item.category}</Badge>
+                    </Table.Td>
                     <Table.Td>
                       <Badge color={statusColors[loan.status]} variant="light">
                         {statusLabels[loan.status]}
@@ -186,27 +248,43 @@ export function MyLoansTable() {
                     </Table.Td>
                     <Table.Td>{new Date(loan.requested_at).toLocaleDateString()}</Table.Td>
                     <Table.Td>
-                      {loan.due_date ? new Date(loan.due_date).toLocaleDateString() : "—"}
+                      {loan.due_date ? (
+                        <Text size="sm" c={overdue ? "red" : undefined}>
+                          {new Date(loan.due_date).toLocaleDateString()}
+                          {overdue && " ⚠ Overdue"}
+                        </Text>
+                      ) : (
+                        <Text c="dimmed">—</Text>
+                      )}
                     </Table.Td>
                   </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
+      )}
 
-          {totalPages > 1 && (
-            <>
-              <Divider />
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  {filtered.length === 0 ? "No loans" : `${(page - 1) * ITEMS_PER_PAGE + 1}–${Math.min(page * ITEMS_PER_PAGE, filtered.length)} of ${filtered.length}`}
-                </Text>
-                <Pagination total={totalPages} value={page} onChange={setPage} size="sm" />
-              </Group>
-            </>
-          )}
-        </Stack>
-      </Paper>
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <>
+          <Divider />
+          <Group justify="space-between" align="center">
+            <Text size="sm" fw={500}>
+              Showing {startItem}–{endItem} of {filtered.length}
+            </Text>
+            <Group gap="xs" align="center">
+              <Button size="sm" variant="default" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Prev
+              </Button>
+              <Pagination value={page} onChange={setPage} total={totalPages} size="md" radius="md" withControls={false} />
+              <Button size="sm" variant="default" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                Next
+              </Button>
+            </Group>
+          </Group>
+        </>
+      )}
     </Stack>
   );
 }
