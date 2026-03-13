@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
-    const auth = await requireRole(["MASTER_ADMIN", "BOARD"]);
+    const auth = await requireRole(["MASTER_ADMIN"]);
 
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
         },
         select: { id: true },
       });
-      actorIdFilter = matchingMembers.map((m) => m.id);
+      actorIdFilter = matchingMembers.map((m: { id: number }) => m.id);
     }
 
     const whereClause = {
@@ -50,14 +50,14 @@ export async function GET(req: Request) {
     ]);
 
     // Enrich with actor names
-    const actorIds = [...new Set(logs.map((l) => l.actor_id))];
+    const actorIds = [...new Set(logs.map((l: { actor_id: number }) => l.actor_id))];
     const members = await prisma.member.findMany({
       where: { id: { in: actorIds } },
       select: { id: true, name: true, email: true },
     });
-    const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
+    const memberMap = Object.fromEntries(members.map((m: { id: number; name: string; email: string }) => [m.id, m]));
 
-    const enriched = logs.map((log) => ({
+    const enriched = logs.map((log: { actor_id: number; [key: string]: unknown }) => ({
       ...log,
       actor: memberMap[log.actor_id] ?? null,
     }));

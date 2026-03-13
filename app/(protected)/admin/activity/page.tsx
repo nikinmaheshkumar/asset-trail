@@ -14,7 +14,7 @@ export default function AdminActivityPage() {
   useEffect(() => {
     if (status === "loading") return;
     const role = session?.user?.role;
-    if (role !== "MASTER_ADMIN" && role !== "BOARD") {
+    if (role !== "MASTER_ADMIN") {
       router.replace("/dashboard");
     }
   }, [session, status, router]);

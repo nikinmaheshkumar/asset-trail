@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const role = session.user.role as string;
 
     const body = await req.json();
-    const { item_id, purpose } = body;
+    const { item_id, purpose, notes, due_date } = body;
 
     if (!item_id || !purpose) {
       return NextResponse.json(
@@ -32,6 +32,10 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+
+    const purposeText = notes
+      ? `${purpose}\n\nNotes: ${notes}`
+      : purpose;
 
     // Check item exists and is available
     const item = await prisma.item.findUnique({
@@ -110,8 +114,9 @@ export async function POST(req: Request) {
       data: {
         item_id: Number(item_id),
         member_id: memberId,
-        purpose,
+        purpose: purposeText,
         status: "REQUESTED",
+        ...(due_date ? { due_date: new Date(due_date) } : {}),
       },
       select: {
         id: true,

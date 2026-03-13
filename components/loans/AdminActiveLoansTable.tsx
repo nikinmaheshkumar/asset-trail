@@ -22,6 +22,7 @@ import {
   ScrollArea,
   ActionIcon,
   Tooltip,
+  Modal,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useSession } from "next-auth/react";
@@ -68,6 +69,7 @@ export function AdminActiveLoansTable() {
   const [approverFilter, setApproverFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [closingId, setClosingId] = useState<number | null>(null);
+  const [confirmCloseId, setConfirmCloseId] = useState<number | null>(null);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -90,6 +92,7 @@ export function AdminActiveLoansTable() {
 
   async function handleClose(id: number) {
     setClosingId(id);
+    setConfirmCloseId(null);
     try {
       const res = await fetch(`/api/loans/${id}/close`, { method: "PATCH" });
       const data = await res.json();
@@ -234,7 +237,7 @@ export function AdminActiveLoansTable() {
                   variant="light"
                   leftSection={<IconLock size={12} />}
                   loading={closingId === loan.id}
-                  onClick={() => handleClose(loan.id)}
+                  onClick={() => setConfirmCloseId(loan.id)}
                   mt="sm"
                 >
                   Close Loan
@@ -300,7 +303,7 @@ export function AdminActiveLoansTable() {
                             color="blue"
                             variant="light"
                             loading={closingId === loan.id}
-                            onClick={() => handleClose(loan.id)}
+                            onClick={() => setConfirmCloseId(loan.id)}
                           >
                             <IconLock size={16} />
                           </ActionIcon>
@@ -337,6 +340,33 @@ export function AdminActiveLoansTable() {
           </Group>
         </>
       )}
+
+      {/* CONFIRM CLOSE MODAL */}
+      <Modal
+        opened={confirmCloseId !== null}
+        onClose={() => setConfirmCloseId(null)}
+        title={<Text fw={700} size="lg">Confirm Return</Text>}
+        centered
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Confirm that the asset has been returned and verified.
+          </Text>
+          <Group justify="flex-end" mt="sm">
+            <Button variant="default" onClick={() => setConfirmCloseId(null)}>
+              Cancel
+            </Button>
+            <Button
+              color="blue"
+              loading={closingId !== null}
+              onClick={() => confirmCloseId !== null && handleClose(confirmCloseId)}
+            >
+              Confirm Close
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

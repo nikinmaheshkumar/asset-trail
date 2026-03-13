@@ -50,8 +50,8 @@ type Loan = {
 
 const statusColors: Record<LoanStatus, string> = {
   REQUESTED: "yellow",
-  APPROVED: "green",
-  CLOSED: "gray",
+  APPROVED: "blue",
+  CLOSED: "green",
   REJECTED: "red",
 };
 

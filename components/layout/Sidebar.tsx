@@ -65,7 +65,7 @@ export function Sidebar() {
       label: "Activity Log",
       href: "/admin/activity",
       icon: IconHistory,
-      roles: ["MASTER_ADMIN", "BOARD"],
+      roles: ["MASTER_ADMIN"],
     },
     {
       label: "Users",

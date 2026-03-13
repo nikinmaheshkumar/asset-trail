@@ -32,15 +32,15 @@ export async function GET(req: Request) {
       take: 5,
     });
 
-    const mostBorrowedItemIds = mostBorrowed.map((m) => m.item_id);
+    const mostBorrowedItemIds = mostBorrowed.map((m: { item_id: number }) => m.item_id);
     const mostBorrowedItems = await prisma.item.findMany({
       where: { id: { in: mostBorrowedItemIds } },
       select: { id: true, name: true, category: true },
     });
     const itemMap = Object.fromEntries(
-      mostBorrowedItems.map((i) => [i.id, i]),
+      mostBorrowedItems.map((i: { id: number; name: string; category: string }) => [i.id, i]),
     );
-    const mostBorrowedResult = mostBorrowed.map((m) => ({
+    const mostBorrowedResult = mostBorrowed.map((m: { item_id: number; _count: { item_id: number } }) => ({
       item: itemMap[m.item_id] ?? { id: m.item_id, name: "Unknown", category: "" },
       count: m._count.item_id,
     }));
@@ -73,12 +73,12 @@ export async function GET(req: Request) {
       take: 10,
     });
 
-    const userIds = userStats.map((u) => u.member_id);
+    const userIds = userStats.map((u: { member_id: number }) => u.member_id);
     const members = await prisma.member.findMany({
       where: { id: { in: userIds } },
       select: { id: true, name: true, email: true, role: true },
     });
-    const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
+    const memberMap = Object.fromEntries(members.map((m: { id: number; name: string; email: string; role: string | null }) => [m.id, m]));
 
     const activeUserLoans = await prisma.loan.groupBy({
       by: ["member_id"],
@@ -86,10 +86,10 @@ export async function GET(req: Request) {
       _count: { id: true },
     });
     const activeMap = Object.fromEntries(
-      activeUserLoans.map((u) => [u.member_id, u._count.id]),
+      activeUserLoans.map((u: { member_id: number; _count: { id: number } }) => [u.member_id, u._count.id]),
     );
 
-    const userBorrowStats = userStats.map((u) => ({
+    const userBorrowStats = userStats.map((u: { member_id: number; _count: { id: number } }) => ({
       member: memberMap[u.member_id] ?? { id: u.member_id, name: "Unknown", email: "", role: null },
       totalLoans: u._count.id,
       activeLoans: activeMap[u.member_id] ?? 0,
