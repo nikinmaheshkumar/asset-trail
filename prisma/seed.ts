@@ -1,3 +1,4 @@
+
 import { PrismaClient, Role, ItemStatus, LoanStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 
@@ -247,9 +248,15 @@ async function main() {
 
   const loans: { id: number }[] = [];
   for (const data of loansData) {
-    const loan = await prisma.loan.create({ data });
-    loans.push(loan);
-  }
+  const loan = await prisma.loan.create({
+    data: {
+      ...data,
+      due_date: data.due_date ?? daysFromNow(7),
+    },
+  });
+
+  loans.push(loan);
+}
   console.log(`✅ ${loans.length} loans seeded`);
 
   // ── Activity Logs ────────────────────────────────────────────────────────────
