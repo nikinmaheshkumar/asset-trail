@@ -113,6 +113,14 @@ export async function PATCH(
       },
     });
 
+    await prisma.activityLog.create({
+      data: {
+        action: "item_updated",
+        actor_id: auth.session.user.id,
+        target_id: itemId,
+      },
+    });
+
     return NextResponse.json(updatedItem);
   } catch (error) {
     console.error("Error updating item:", error);

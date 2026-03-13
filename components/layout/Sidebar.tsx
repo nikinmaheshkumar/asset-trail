@@ -18,6 +18,9 @@ import {
   IconClipboardList,
   IconLogout,
   IconUser,
+  IconFileText,
+  IconHistory,
+  IconClockCheck,
 } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -41,10 +44,28 @@ export function Sidebar() {
       roles: ["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"],
     },
     {
-      label: "Loans",
-      href: "/loans",
+      label: "My Loans",
+      href: "/my-loans",
       icon: IconClipboardList,
       roles: ["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"],
+    },
+    {
+      label: "Loan Requests",
+      href: "/admin/requests",
+      icon: IconFileText,
+      roles: ["MASTER_ADMIN", "BOARD"],
+    },
+    {
+      label: "Active Loans",
+      href: "/admin/loans",
+      icon: IconClockCheck,
+      roles: ["MASTER_ADMIN", "BOARD"],
+    },
+    {
+      label: "Activity Log",
+      href: "/admin/activity",
+      icon: IconHistory,
+      roles: ["MASTER_ADMIN", "BOARD"],
     },
     {
       label: "Users",

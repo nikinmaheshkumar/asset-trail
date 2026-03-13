@@ -90,6 +90,14 @@ export async function POST(req: Request) {
       },
     });
 
+    await prisma.activityLog.create({
+      data: {
+        action: "member_created",
+        actor_id: auth.session.user.id,
+        target_id: member.id,
+      },
+    });
+
     return NextResponse.json(member, { status: 201 });
 
   } catch (error) {

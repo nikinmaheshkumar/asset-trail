@@ -86,22 +86,30 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
     setBorrowingId(itemId);
 
     try {
-      const res = await fetch("/api/loans", {
+      const res = await fetch("/api/loans/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           item_id: itemId,
-          member_id: 4,
-          due_date: new Date(Date.now() + 7 * 86400000),
+          purpose: "General use",
         }),
       });
 
-      if (!res.ok) throw new Error();
+      const data = await res.json();
+
+      if (!res.ok) {
+        notifications.show({
+          color: "red",
+          title: "Request Failed",
+          message: data.error ?? "Request failed",
+        });
+        return;
+      }
 
       notifications.show({
         color: "green",
-        title: "Success",
-        message: "Item borrowed successfully",
+        title: "Request Submitted",
+        message: "Your loan request has been submitted for approval",
       });
 
       fetchItems();
@@ -109,7 +117,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
       notifications.show({
         color: "red",
         title: "Error",
-        message: "Borrow failed",
+        message: "Failed to submit request",
       });
     } finally {
       setBorrowingId(null);
