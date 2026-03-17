@@ -9,17 +9,14 @@ export async function GET(req: Request) {
     const auth = await requireAuth();
 
     if ("error" in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status }
-      );
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { searchParams } = new URL(req.url);
-    const memberIdParam = searchParams.get("member_id");
+    const { session } = auth;
+    const memberId = session.user.id;
 
     const loans = await prisma.loan.findMany({
-      where: memberIdParam ? { member_id: Number(memberIdParam) } : undefined,
+      where: { member_id: memberId },
       select: {
         id: true,
         item_id: true,
@@ -31,17 +28,14 @@ export async function GET(req: Request) {
         purpose: true,
         status: true,
         approved_by: true,
-        created_at: true,
-        updated_at: true,
+        item: { select: { id: true, name: true, category: true } },
       },
       orderBy: { requested_at: "desc" },
     });
 
     return NextResponse.json(loans);
-
   } catch (error) {
-    console.error("Error fetching loans:", error);
-
+    console.error("Error fetching my loans:", error);
     return NextResponse.json(
       { error: "Failed to fetch loans" },
       { status: 500 },

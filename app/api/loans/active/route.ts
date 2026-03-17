@@ -2,48 +2,40 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
-    const auth = await requireAuth();
+    const auth = await requireRole(["MASTER_ADMIN", "BOARD"]);
 
     if ("error" in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status }
-      );
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { searchParams } = new URL(req.url);
-    const memberIdParam = searchParams.get("member_id");
-
     const loans = await prisma.loan.findMany({
-      where: memberIdParam ? { member_id: Number(memberIdParam) } : undefined,
+      where: { status: "APPROVED" },
       select: {
         id: true,
         item_id: true,
         member_id: true,
         requested_at: true,
         approved_at: true,
-        closed_at: true,
         due_date: true,
         purpose: true,
         status: true,
         approved_by: true,
-        created_at: true,
-        updated_at: true,
+        item: { select: { id: true, name: true, category: true } },
+        member: { select: { id: true, name: true, email: true, role: true } },
+        approver: { select: { id: true, name: true } },
       },
-      orderBy: { requested_at: "desc" },
+      orderBy: { approved_at: "desc" },
     });
 
     return NextResponse.json(loans);
-
   } catch (error) {
-    console.error("Error fetching loans:", error);
-
+    console.error("Error fetching active loans:", error);
     return NextResponse.json(
-      { error: "Failed to fetch loans" },
+      { error: "Failed to fetch active loans" },
       { status: 500 },
     );
   }
