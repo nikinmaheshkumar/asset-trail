@@ -31,6 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { loanStatusColor, loanStatusLabel } from "@/lib/status";
 
 const roleColors: Record<string, string> = {
   MASTER_ADMIN: "red",
@@ -46,12 +47,7 @@ const roleLabels: Record<string, string> = {
   JUNIOR_CORE: "Junior Core",
 };
 
-const statusColors: Record<string, string> = {
-  REQUESTED: "yellow",
-  APPROVED: "steel",
-  CLOSED: "green",
-  REJECTED: "red",
-};
+// loan status labels/colors normalized in lib/status
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -371,8 +367,8 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
                         )}
                       </Table.Td>
                       <Table.Td>
-                        <Badge size="xs" color={statusColors[loan.status ?? ""] ?? "brand"} variant="light">
-                          {loan.status}
+                        <Badge size="xs" color={loanStatusColor(loan.status)} variant="light">
+                          {loanStatusLabel(loan.status)}
                         </Badge>
                       </Table.Td>
                     </Table.Tr>
@@ -422,8 +418,8 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
                       <Text size="xs">{new Date(loan.requested_at).toLocaleDateString()}</Text>
                     </Table.Td>
                     <Table.Td>
-                      <Badge size="xs" color={statusColors[loan.status ?? ""] ?? "brand"} variant="light">
-                        {loan.status}
+                      <Badge size="xs" color={loanStatusColor(loan.status)} variant="light">
+                        {loanStatusLabel(loan.status)}
                       </Badge>
                     </Table.Td>
                   </Table.Tr>

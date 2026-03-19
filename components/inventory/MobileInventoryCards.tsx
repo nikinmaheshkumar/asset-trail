@@ -15,6 +15,7 @@ import { Item } from "./InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useSession } from "next-auth/react";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { itemStatusColor, itemStatusLabel } from "@/lib/status";
 
 type Props = {
   items: Item[];
@@ -58,17 +59,9 @@ export function MobileInventoryCards({
 
               <Badge
                 variant="light"
-                color={
-                  item.status === "WORKING"
-                    ? "green"
-                    : item.status === "NEEDS_TESTING"
-                    ? "yellow"
-                    : item.status === "FAULTY"
-                    ? "red"
-                    : "brand"
-                }
+                color={itemStatusColor(item.status)}
               >
-                {item.status}
+                {itemStatusLabel(item.status)}
               </Badge>
             </Group>
 

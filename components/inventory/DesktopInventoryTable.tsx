@@ -22,6 +22,7 @@ import {
 import { Item } from "./InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useSession } from "next-auth/react";
+import { itemStatusColor, itemStatusLabel } from "@/lib/status";
 
 type Props = {
   items: Item[];
@@ -156,18 +157,8 @@ export function DesktopInventoryTable({
 
                 {/* Status */}
                 <Table.Td>
-                  <Badge
-                    color={
-                      item.status === "WORKING"
-                        ? "green"
-                        : item.status === "NEEDS_TESTING"
-                        ? "yellow"
-                        : item.status === "FAULTY"
-                        ? "red"
-                        : "brand"
-                    }
-                  >
-                    {item.status}
+                  <Badge color={itemStatusColor(item.status)}>
+                    {itemStatusLabel(item.status)}
                   </Badge>
                 </Table.Td>
 

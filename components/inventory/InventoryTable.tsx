@@ -22,6 +22,7 @@ import { IconSearch, IconRefresh } from "@tabler/icons-react";
 import { DesktopInventoryTable } from "./DesktopInventoryTable";
 import { MobileInventoryCards } from "./MobileInventoryCards";
 import { RequestLoanModal } from "@/components/loans/RequestLoanModal";
+import { ITEM_STATUS_LABELS, itemStatusLabel } from "@/lib/status";
 
 export type Item = {
   id: number
@@ -147,6 +148,19 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
   const categories = [...new Set(items.map((i) => i.category))];
   const statuses = [...new Set(items.map((i) => i.status))];
 
+  const statusOptions = statuses
+    .slice()
+    .sort((a, b) => {
+      const aKnown = Object.prototype.hasOwnProperty.call(ITEM_STATUS_LABELS, a);
+      const bKnown = Object.prototype.hasOwnProperty.call(ITEM_STATUS_LABELS, b);
+
+      if (aKnown && !bKnown) return -1;
+      if (!aKnown && bKnown) return 1;
+
+      return itemStatusLabel(a).localeCompare(itemStatusLabel(b));
+    })
+    .map((value) => ({ value, label: itemStatusLabel(value) }));
+
   return (
     <Stack gap="xl">
 
@@ -202,7 +216,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
           <Select
             label="Status"
             placeholder="All"
-            data={statuses}
+            data={statusOptions}
             size="sm"
             value={statusFilter}
             onChange={setStatusFilter}
