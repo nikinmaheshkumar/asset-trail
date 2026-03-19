@@ -40,14 +40,15 @@ export function DesktopInventoryTable({
   const role = session?.user?.role;
 
   return (
-    <ScrollArea>
-      <Table
-        verticalSpacing="lg"
-        horizontalSpacing="xl"
-        highlightOnHover
-        stickyHeader
-      >
-        <Table.Thead style={{ background: "#f8f9fa" }}>
+    <div className="table-shell">
+      <ScrollArea>
+        <Table
+          verticalSpacing="lg"
+          horizontalSpacing="xl"
+          highlightOnHover
+          stickyHeader
+        >
+        <Table.Thead style={{ background: "var(--app-table-head)" }}>
           <Table.Tr>
             <Table.Th>
               <Group gap={6}>
@@ -136,14 +137,14 @@ export function DesktopInventoryTable({
                         lowStock
                           ? "red"
                           : item.quantity_available === 0
-                          ? "gray"
+                          ? "brand"
                           : undefined
                       }
                     >
                       {item.quantity_available}
                     </Text>
 
-                    <Text c="dimmed">/ {item.quantity_total}</Text>
+                    <Text>/ {item.quantity_total}</Text>
 
                     {lowStock && (
                       <Badge color="red" variant="light" radius="xl">
@@ -163,7 +164,7 @@ export function DesktopInventoryTable({
                         ? "yellow"
                         : item.status === "FAULTY"
                         ? "red"
-                        : "gray"
+                        : "brand"
                     }
                   >
                     {item.status}
@@ -186,6 +187,7 @@ export function DesktopInventoryTable({
                       size="sm"
                       disabled={unavailable}
                       onClick={() => onBorrow(item)}
+                      color={unavailable ? undefined : "ink"}
                     >
                       {item.quantity_available === 0
                         ? "Out of Stock"
@@ -202,6 +204,7 @@ export function DesktopInventoryTable({
                         size="sm"
                         fw={700}
                         variant="light"
+                        color="steel"
                         px="md"
                         leftSection={<IconEdit size={16} />}
                         onClick={() => onEdit(item)}
@@ -237,7 +240,8 @@ export function DesktopInventoryTable({
             );
           })}
         </Table.Tbody>
-      </Table>
-    </ScrollArea>
+        </Table>
+      </ScrollArea>
+    </div>
   );
 }

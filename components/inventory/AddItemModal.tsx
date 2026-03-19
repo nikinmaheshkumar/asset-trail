@@ -81,11 +81,11 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
 
       onCreated();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       notifications.show({
         color: "red",
         title: "Error",
-        message: err.message || "Failed to create item",
+        message: err instanceof Error ? err.message : "Failed to create item",
       });
     } finally {
       setLoading(false);
@@ -142,6 +142,7 @@ export function AddItemModal({ opened, onClose, onCreated }: Props) {
           loading={loading}
           disabled={!name || !category || quantityTotal === "" || !location}
           onClick={handleSubmit}
+          color="brand"
         >
           Create Item
         </Button>

@@ -30,14 +30,13 @@ import {
   IconPackage,
 } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const roleColors: Record<string, string> = {
   MASTER_ADMIN: "red",
-  BOARD: "blue",
+  BOARD: "accent",
   SENIOR_CORE: "yellow",
-  JUNIOR_CORE: "gray",
+  JUNIOR_CORE: "yellow.6",
 };
 
 const roleLabels: Record<string, string> = {
@@ -49,7 +48,7 @@ const roleLabels: Record<string, string> = {
 
 const statusColors: Record<string, string> = {
   REQUESTED: "yellow",
-  APPROVED: "blue",
+  APPROVED: "steel",
   CLOSED: "green",
   REJECTED: "red",
 };
@@ -105,7 +104,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
   const { stats, pendingRequests, activeLoans, lowStockItems } = data;
 
   const statCards = [
-    { label: "Total Items", value: stats.totalItems, icon: IconBox, color: "blue" },
+    { label: "Total Items", value: stats.totalItems, icon: IconBox, color: "accent" },
     { label: "Active Loans", value: stats.activeLoans, icon: IconClipboardList, color: "green" },
     { label: "Pending Requests", value: stats.pendingRequests, icon: IconClock, color: "yellow" },
     { label: "Low Stock Items", value: stats.lowStockItems, icon: IconAlertTriangle, color: "red" },
@@ -120,7 +119,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
           return (
             <Card key={card.label} withBorder radius="md" p="md">
               <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed" fw={500}>{card.label}</Text>
+                <Text size="sm" fw={800}>{card.label}</Text>
                 <ThemeIcon color={card.color} variant="light" size="md" radius="md">
                   <Icon size={16} />
                 </ThemeIcon>
@@ -153,7 +152,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
           </Group>
           <Divider mb="sm" />
           {pendingRequests.length === 0 ? (
-            <Text c="dimmed" size="sm">No pending requests</Text>
+            <Text size="sm">No pending requests</Text>
           ) : (
             <Table highlightOnHover>
               <Table.Thead>
@@ -170,7 +169,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
                       <Stack gap={2}>
                         <Text size="sm" fw={500}>{req.member?.name ?? "—"}</Text>
                         {req.member?.role && (
-                          <Badge size="xs" color={roleColors[req.member.role] ?? "gray"} variant="light">
+                          <Badge size="xs" color={roleColors[req.member.role] ?? "brand"} variant="light">
                             {roleLabels[req.member.role] ?? req.member.role}
                           </Badge>
                         )}
@@ -183,7 +182,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
                       </Stack>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="xs" c="dimmed">{new Date(req.requested_at).toLocaleDateString()}</Text>
+                      <Text size="xs">{new Date(req.requested_at).toLocaleDateString()}</Text>
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -196,7 +195,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
         <Paper withBorder p="md" radius="md">
           <Group justify="space-between" mb="sm">
             <Group>
-              <ThemeIcon color="blue" variant="light" size="md" radius="md">
+              <ThemeIcon color="accent" variant="light" size="md" radius="md">
                 <IconClipboardList size={16} />
               </ThemeIcon>
               <Title order={5}>Active Loans</Title>
@@ -213,7 +212,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
           </Group>
           <Divider mb="sm" />
           {activeLoans.length === 0 ? (
-            <Text c="dimmed" size="sm">No active loans</Text>
+            <Text size="sm">No active loans</Text>
           ) : (
             <Table highlightOnHover>
               <Table.Thead>
@@ -236,12 +235,12 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
                       </Table.Td>
                       <Table.Td>
                         {loan.due_date ? (
-                          <Text size="xs" c={overdue ? "red" : "dimmed"} fw={overdue ? 700 : undefined}>
+                          <Text size="xs" c={overdue ? "red" : undefined} fw={overdue ? 700 : undefined}>
                             {new Date(loan.due_date).toLocaleDateString()}
                             {overdue && " ⚠"}
                           </Text>
                         ) : (
-                          <Text size="xs" c="dimmed">—</Text>
+                          <Text size="xs">—</Text>
                         )}
                       </Table.Td>
                     </Table.Tr>
@@ -263,7 +262,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
         </Group>
         <Divider mb="sm" />
         {lowStockItems.length === 0 ? (
-          <Text c="dimmed" size="sm">No low stock items</Text>
+          <Text size="sm">No low stock items</Text>
         ) : (
           <Table highlightOnHover>
             <Table.Thead>
@@ -282,7 +281,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
                       {item.quantity_available} / {item.quantity_total}
                     </Text>
                   </Table.Td>
-                  <Table.Td><Text size="xs" c="dimmed">{item.location}</Text></Table.Td>
+                  <Table.Td><Text size="xs">{item.location}</Text></Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -314,7 +313,7 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
               <Group key={loan.id} gap="xs">
                 <IconCalendarDue size={14} />
                 <Text size="sm" fw={500}>{loan.item.name}</Text>
-                <Text size="xs" c="dimmed">
+                <Text size="xs">
                   — due {loan.due_date ? new Date(loan.due_date).toLocaleDateString() : "—"}
                 </Text>
               </Group>
@@ -327,15 +326,15 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
         {/* My Active Loans */}
         <Paper withBorder p="md" radius="md">
           <Group mb="sm">
-            <ThemeIcon color="blue" variant="light" size="md" radius="md">
+            <ThemeIcon color="accent" variant="light" size="md" radius="md">
               <IconClipboardList size={16} />
             </ThemeIcon>
             <Title order={5}>My Active Loans</Title>
-            <Badge color="blue" variant="light">{myActiveLoans.length}</Badge>
+            <Badge color="accent" variant="light">{myActiveLoans.length}</Badge>
           </Group>
           <Divider mb="sm" />
           {myActiveLoans.length === 0 ? (
-            <Text c="dimmed" size="sm">No active loans</Text>
+            <Text size="sm">No active loans</Text>
           ) : (
             <Table highlightOnHover>
               <Table.Thead>
@@ -358,21 +357,21 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
                         </Stack>
                       </Table.Td>
                       <Table.Td>
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs">
                           {loan.approved_at ? new Date(loan.approved_at).toLocaleDateString() : "—"}
                         </Text>
                       </Table.Td>
                       <Table.Td>
                         {loan.due_date ? (
-                          <Text size="xs" c={overdue ? "red" : "dimmed"} fw={overdue ? 700 : undefined}>
+                          <Text size="xs" c={overdue ? "red" : undefined} fw={overdue ? 700 : undefined}>
                             {new Date(loan.due_date).toLocaleDateString()}
                           </Text>
                         ) : (
-                          <Text size="xs" c="dimmed">—</Text>
+                          <Text size="xs">—</Text>
                         )}
                       </Table.Td>
                       <Table.Td>
-                        <Badge size="xs" color={statusColors[loan.status ?? ""] ?? "gray"} variant="light">
+                        <Badge size="xs" color={statusColors[loan.status ?? ""] ?? "brand"} variant="light">
                           {loan.status}
                         </Badge>
                       </Table.Td>
@@ -400,7 +399,7 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
           </Group>
           <Divider mb="sm" />
           {myPendingRequests.length === 0 ? (
-            <Text c="dimmed" size="sm">No pending requests</Text>
+            <Text size="sm">No pending requests</Text>
           ) : (
             <Table highlightOnHover>
               <Table.Thead>
@@ -420,10 +419,10 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
                       </Stack>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="xs" c="dimmed">{new Date(loan.requested_at).toLocaleDateString()}</Text>
+                      <Text size="xs">{new Date(loan.requested_at).toLocaleDateString()}</Text>
                     </Table.Td>
                     <Table.Td>
-                      <Badge size="xs" color={statusColors[loan.status ?? ""] ?? "gray"} variant="light">
+                      <Badge size="xs" color={statusColors[loan.status ?? ""] ?? "brand"} variant="light">
                         {loan.status}
                       </Badge>
                     </Table.Td>
@@ -446,7 +445,7 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
         </Group>
         <Divider mb="sm" />
         {lowStockItems.length === 0 ? (
-          <Text c="dimmed" size="sm">No low stock items</Text>
+          <Text size="sm">No low stock items</Text>
         ) : (
           <Table highlightOnHover>
             <Table.Thead>
@@ -465,7 +464,7 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
                       {item.quantity_available} / {item.quantity_total}
                     </Text>
                   </Table.Td>
-                  <Table.Td><Text size="xs" c="dimmed">{item.location}</Text></Table.Td>
+                  <Table.Td><Text size="xs">{item.location}</Text></Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -482,7 +481,6 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const [dashData, setDashData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -495,14 +493,14 @@ export default function Dashboard() {
   const isAdmin = role === "MASTER_ADMIN" || role === "BOARD";
 
   return (
-    <Stack gap="xl" p="md">
+    <Stack gap="xl" p="md" className="dashboard-root">
       <Group>
-        <ThemeIcon color={isAdmin ? "blue" : "green"} variant="light" size="lg" radius="md">
+        <ThemeIcon color={isAdmin ? "accent" : "green"} variant="light" size="lg" radius="md">
           {isAdmin ? <IconUsers size={20} /> : <IconBolt size={20} />}
         </ThemeIcon>
         <div>
           <Title order={3}>Dashboard</Title>
-          <Text size="sm" c="dimmed">
+          <Text size="sm">
             {isAdmin ? "System overview" : "Your activity"}
           </Text>
         </div>
@@ -514,7 +512,7 @@ export default function Dashboard() {
         </Center>
       ) : !dashData ? (
         <Center py="xl">
-          <Text c="dimmed">Failed to load dashboard</Text>
+          <Text>Failed to load dashboard</Text>
         </Center>
       ) : dashData.type === "admin" ? (
         <AdminDashboardView data={dashData} />

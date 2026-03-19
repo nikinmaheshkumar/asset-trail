@@ -50,7 +50,7 @@ type Loan = {
 
 const statusColors: Record<LoanStatus, string> = {
   REQUESTED: "yellow",
-  APPROVED: "blue",
+  APPROVED: "steel",
   CLOSED: "green",
   REJECTED: "red",
 };
@@ -130,7 +130,16 @@ export function MyLoansTable() {
   return (
     <Stack gap="xl">
       {/* FILTER PANEL */}
-      <Paper withBorder radius="md" p="md" shadow="xs">
+      <Paper
+        withBorder
+        radius="md"
+        p="md"
+        shadow="xs"
+        style={{
+          background: "linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-accent-soft) 28%, var(--app-surface)) 100%)",
+          borderColor: "color-mix(in srgb, var(--app-accent) 18%, var(--app-border))",
+        }}
+      >
         <Group justify="space-between" mb="md">
           <Title order={5} fw={800}>Filters</Title>
           <Button
@@ -139,6 +148,7 @@ export function MyLoansTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
+            color="accent"
           >
             Reset
           </Button>
@@ -172,7 +182,7 @@ export function MyLoansTable() {
       {/* TABLE OR MOBILE CARDS */}
       {filtered.length === 0 ? (
         <Center py="lg">
-          <Text c="dimmed">No loans match your filters</Text>
+          <Text>No loans match your filters</Text>
         </Center>
       ) : isMobile ? (
         <Stack gap="md">
@@ -185,13 +195,13 @@ export function MyLoansTable() {
                 </Badge>
               </Group>
               <Badge variant="light" mb="xs">{loan.item.category}</Badge>
-              <Text size="sm" c="dimmed">
+              <Text size="sm">
                 Requested: {new Date(loan.requested_at).toLocaleDateString()}
               </Text>
               {loan.due_date && (
                 <Text
                   size="sm"
-                  c={loan.status === "APPROVED" && new Date(loan.due_date) < new Date() ? "red" : "dimmed"}
+                  c={loan.status === "APPROVED" && new Date(loan.due_date) < new Date() ? "red" : undefined}
                 >
                   Due: {new Date(loan.due_date).toLocaleDateString()}
                 </Text>
@@ -200,10 +210,11 @@ export function MyLoansTable() {
           ))}
         </Stack>
       ) : (
-        <ScrollArea>
-          <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
-            <Table.Thead style={{ background: "#f8f9fa" }}>
-              <Table.Tr>
+        <div className="table-shell">
+          <ScrollArea>
+            <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
+              <Table.Thead style={{ background: "var(--app-table-head)" }}>
+                <Table.Tr>
                 <Table.Th>
                   <Group gap={6}><IconHash size={16} /></Group>
                 </Table.Th>
@@ -223,9 +234,9 @@ export function MyLoansTable() {
                   <Group gap={6}><IconCalendarDue size={16} /><Text fw={800}>Due Date</Text></Group>
                 </Table.Th>
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {paginated.map((loan, idx) => {
+              </Table.Thead>
+              <Table.Tbody>
+                {paginated.map((loan, idx) => {
                 const overdue =
                   loan.status === "APPROVED" &&
                   loan.due_date &&
@@ -254,15 +265,16 @@ export function MyLoansTable() {
                           {overdue && " ⚠ Overdue"}
                         </Text>
                       ) : (
-                        <Text c="dimmed">—</Text>
+                        <Text>—</Text>
                       )}
                     </Table.Td>
                   </Table.Tr>
                 );
               })}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
+        </div>
       )}
 
       {/* PAGINATION */}

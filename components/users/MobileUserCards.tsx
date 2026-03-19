@@ -119,7 +119,7 @@ export function MobileUsersCards({
                   )}
                 </Group>
 
-                <Text size="sm" c="dimmed">
+                <Text size="sm">
                   {member.email}
                 </Text>
 
@@ -193,10 +193,10 @@ export function MobileUsersCards({
                   member.role === "MASTER_ADMIN"
                     ? "red"
                     : member.role === "BOARD"
-                    ? "blue"
+                    ? "steel"
                     : member.role === "SENIOR_CORE"
                     ? "yellow.7"
-                    : "gray"
+                    : "yellow.6"
                 }
               >
                 {roleLabels[member.role]}

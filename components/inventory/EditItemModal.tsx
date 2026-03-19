@@ -153,7 +153,7 @@ export function EditItemModal({ opened, onClose, item, onUpdated }: Props) {
           }}
         />
 
-        <Text size="sm" c="dimmed">
+        <Text size="sm">
           Borrowed items: {borrowed}
         </Text>
 
@@ -182,6 +182,7 @@ export function EditItemModal({ opened, onClose, item, onUpdated }: Props) {
           loading={loading}
           disabled={invalidQuantity}
           onClick={handleUpdate}
+          color="steel"
         >
           Update Item
         </Button>

@@ -96,7 +96,8 @@ export function DesktopUsersTable({
   }
 
   return (
-    <Table highlightOnHover verticalSpacing="lg" horizontalSpacing="md">
+    <div className="table-shell">
+      <Table highlightOnHover verticalSpacing="lg" horizontalSpacing="md">
 
       <Table.Thead>
         <Table.Tr style={{ background: "white" }}>
@@ -158,7 +159,7 @@ export function DesktopUsersTable({
                     )}
                   </Group>
 
-                  <Text size="sm" c="dimmed">
+                  <Text size="sm">
                     {member.email}
                   </Text>
 
@@ -174,10 +175,10 @@ export function DesktopUsersTable({
                     member.role === "MASTER_ADMIN"
                       ? "red"
                       : member.role === "BOARD"
-                      ? "blue"
+                      ? "steel"
                       : member.role === "SENIOR_CORE"
                       ? "yellow.7"
-                      : "gray"
+                      : "yellow.6"
                   }
                 >
                   {roleLabels[member.role]}
@@ -265,6 +266,7 @@ export function DesktopUsersTable({
 
       </Table.Tbody>
 
-    </Table>
+      </Table>
+    </div>
   );
 }

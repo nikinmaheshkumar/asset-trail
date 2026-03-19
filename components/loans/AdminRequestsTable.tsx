@@ -51,9 +51,9 @@ type LoanRequest = {
 
 const roleColors: Record<string, string> = {
   MASTER_ADMIN: "red",
-  BOARD: "blue",
+  BOARD: "accent",
   SENIOR_CORE: "yellow.7",
-  JUNIOR_CORE: "gray",
+  JUNIOR_CORE: "yellow.6",
 };
 
 const roleLabels: Record<string, string> = {
@@ -169,7 +169,16 @@ export function AdminRequestsTable() {
   return (
     <Stack gap="xl">
       {/* FILTER PANEL */}
-      <Paper withBorder radius="md" p="md" shadow="xs">
+      <Paper
+        withBorder
+        radius="md"
+        p="md"
+        shadow="xs"
+        style={{
+          background: "linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-accent-soft) 26%, var(--app-surface)) 100%)",
+          borderColor: "color-mix(in srgb, var(--app-accent) 18%, var(--app-border))",
+        }}
+      >
         <Group justify="space-between" mb="md">
           <Title order={5} fw={800}>Filters</Title>
           <Button
@@ -178,6 +187,7 @@ export function AdminRequestsTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={() => { handleReset(); fetchRequests(); }}
             disabled={!filtersActive}
+            color="accent"
           >
             Reset
           </Button>
@@ -211,7 +221,7 @@ export function AdminRequestsTable() {
       {/* TABLE OR MOBILE CARDS */}
       {filtered.length === 0 ? (
         <Center py="lg">
-          <Text c="dimmed">No pending requests match your filters</Text>
+          <Text>No pending requests match your filters</Text>
         </Center>
       ) : isMobile ? (
         <Stack gap="md">
@@ -219,17 +229,17 @@ export function AdminRequestsTable() {
             <Card key={req.id} withBorder radius="md" p="md">
               <Group justify="space-between" mb="xs">
                 <Text fw={700}>{req.item.name}</Text>
-                <Badge color={roleColors[req.member.role] ?? "gray"} variant="light">
+                <Badge color={roleColors[req.member.role] ?? "brand"} variant="light">
                   {roleLabels[req.member.role] ?? req.member.role}
                 </Badge>
               </Group>
               <Text size="sm" fw={500}>{req.member.name}</Text>
-              <Text size="sm" c="dimmed" mb="xs">{req.member.email}</Text>
-              <Text size="xs" c="dimmed">
+              <Text size="sm" mb="xs">{req.member.email}</Text>
+              <Text size="xs">
                 Requested: {new Date(req.requested_at).toLocaleDateString()}
               </Text>
               {req.purpose && (
-                <Text size="xs" c="dimmed">Purpose: {req.purpose}</Text>
+                <Text size="xs">Purpose: {req.purpose}</Text>
               )}
               <Group gap="xs" mt="sm">
                 <Button
@@ -256,10 +266,11 @@ export function AdminRequestsTable() {
           ))}
         </Stack>
       ) : (
-        <ScrollArea>
-          <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
-            <Table.Thead style={{ background: "#f8f9fa" }}>
-              <Table.Tr>
+        <div className="table-shell">
+          <ScrollArea>
+            <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
+              <Table.Thead style={{ background: "var(--app-table-head)" }}>
+                <Table.Tr>
                 <Table.Th><Group gap={6}><IconHash size={16} /></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconBox size={16} /><Text fw={800}>Item</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconUser size={16} /><Text fw={800}>Requested By</Text></Group></Table.Th>
@@ -268,9 +279,9 @@ export function AdminRequestsTable() {
                 <Table.Th><Group gap={6}><IconNotes size={16} /><Text fw={800}>Purpose</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconSettings size={16} /><Text fw={800}>Actions</Text></Group></Table.Th>
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {paginated.map((req, idx) => (
+              </Table.Thead>
+              <Table.Tbody>
+                {paginated.map((req, idx) => (
                 <Table.Tr key={req.id}>
                   <Table.Td><Text fw={600}>{(page - 1) * ITEMS_PER_PAGE + idx + 1}</Text></Table.Td>
                   <Table.Td>
@@ -282,17 +293,17 @@ export function AdminRequestsTable() {
                   <Table.Td>
                     <Stack gap={2}>
                       <Text fw={600} size="sm">{req.member.name}</Text>
-                      <Text size="xs" c="dimmed">{req.member.email}</Text>
+                      <Text size="xs">{req.member.email}</Text>
                     </Stack>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={roleColors[req.member.role] ?? "gray"} variant="light" fw={600}>
+                    <Badge color={roleColors[req.member.role] ?? "brand"} variant="light" fw={600}>
                       {roleLabels[req.member.role] ?? req.member.role}
                     </Badge>
                   </Table.Td>
                   <Table.Td>{new Date(req.requested_at).toLocaleDateString()}</Table.Td>
                   <Table.Td>
-                    <Text size="sm" c="dimmed">{req.purpose || "—"}</Text>
+                    <Text size="sm">{req.purpose || "—"}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs">
@@ -320,9 +331,10 @@ export function AdminRequestsTable() {
                   </Table.Td>
                 </Table.Tr>
               ))}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
+        </div>
       )}
 
       {/* PAGINATION */}

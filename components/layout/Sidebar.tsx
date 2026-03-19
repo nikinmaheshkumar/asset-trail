@@ -88,9 +88,9 @@ export function Sidebar() {
 
   const roleColors: Record<string, string> = {
     MASTER_ADMIN: "red",
-    BOARD: "blue",
+    BOARD: "accent",
     SENIOR_CORE: "yellow.7",
-    JUNIOR_CORE: "gray",
+    JUNIOR_CORE: "yellow.6",
   };
 
   return (
@@ -112,18 +112,21 @@ export function Sidebar() {
                 py="xs"
                 style={{
                   borderRadius: 8,
+                  borderLeft: isActive
+                    ? "3px solid var(--app-accent)"
+                    : "3px solid transparent",
                   backgroundColor: isActive
-                    ? "rgba(255,255,255,0.08)"
+                    ? "color-mix(in srgb, var(--app-accent) 18%, rgba(255,255,255,0.08))"
                     : "transparent",
                   cursor: "pointer",
                 }}
               >
                 <Group gap="sm">
-                  <Icon size={18} color={isActive ? "white" : "#9CA3AF"} />
+                  <Icon size={18} color="white" />
                   <Text
                     size="md"
-                    fw={isActive ? 600 : 400}
-                    c={isActive ? "white" : "gray.4"}
+                    fw={isActive ? 700 : 600}
+                    c="white"
                   >
                     {item.label}
                   </Text>
@@ -136,7 +139,7 @@ export function Sidebar() {
 
       {/* User Section */}
       <Stack gap="md">
-        <Divider color="dark.4" />
+        <Divider color="rgba(255,255,255,0.12)" />
 
         <Box
           px="md"
@@ -148,7 +151,7 @@ export function Sidebar() {
           }}
         >
           <Stack align="center" gap="xs">
-            <Avatar size={42} radius="xl" color="blue">
+            <Avatar size={42} radius="xl" color="accent">
               {session?.user?.name?.[0]?.toUpperCase() ?? "U"}
             </Avatar>
 
@@ -157,7 +160,7 @@ export function Sidebar() {
                 {session?.user?.name ?? "Unknown"}
               </Text>
 
-              <Text size="xs" c="gray.4">
+              <Text size="xs" c="white">
                 {session?.user?.email}
               </Text>
             </Stack>

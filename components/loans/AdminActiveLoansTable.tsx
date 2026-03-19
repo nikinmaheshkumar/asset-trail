@@ -101,7 +101,7 @@ export function AdminActiveLoansTable() {
         notifications.show({ color: "red", title: "Error", message: data.error ?? "Close failed" });
         return;
       }
-      notifications.show({ color: "blue", title: "Closed", message: "Loan has been closed" });
+      notifications.show({ color: "steel", title: "Closed", message: "Loan has been closed" });
       fetchLoans();
     } catch {
       notifications.show({ color: "red", title: "Error", message: "Close failed" });
@@ -166,7 +166,16 @@ export function AdminActiveLoansTable() {
   return (
     <Stack gap="xl">
       {/* FILTER PANEL */}
-      <Paper withBorder radius="md" p="md" shadow="xs">
+      <Paper
+        withBorder
+        radius="md"
+        p="md"
+        shadow="xs"
+        style={{
+          background: "linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-accent-2-soft) 28%, var(--app-surface)) 100%)",
+          borderColor: "color-mix(in srgb, var(--app-accent-2) 16%, var(--app-border))",
+        }}
+      >
         <Group justify="space-between" mb="md">
           <Title order={5} fw={800}>Filters</Title>
           <Button
@@ -175,6 +184,7 @@ export function AdminActiveLoansTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={() => { handleReset(); fetchLoans(); }}
             disabled={!filtersActive}
+            color="accent"
           >
             Reset
           </Button>
@@ -210,7 +220,7 @@ export function AdminActiveLoansTable() {
       {/* TABLE OR MOBILE CARDS */}
       {filtered.length === 0 ? (
         <Center py="lg">
-          <Text c="dimmed">No active loans match your filters</Text>
+          <Text>No active loans match your filters</Text>
         </Center>
       ) : isMobile ? (
         <Stack gap="md">
@@ -224,17 +234,17 @@ export function AdminActiveLoansTable() {
               </Group>
               <Badge variant="light" mb="xs">{loan.item.category}</Badge>
               <Text size="sm" fw={500}>{loan.member.name}</Text>
-              <Text size="sm" c="dimmed" mb="xs">{loan.member.email}</Text>
+              <Text size="sm" mb="xs">{loan.member.email}</Text>
               {loan.due_date && (
-                <Text size="sm" c={isOverdue(loan.due_date) ? "red" : "dimmed"}>
+                <Text size="sm" c={isOverdue(loan.due_date) ? "red" : undefined}>
                   Due: {new Date(loan.due_date).toLocaleDateString()}
                 </Text>
               )}
-              <Text size="xs" c="dimmed">Approved by: {loan.approver?.name ?? "—"}</Text>
+              <Text size="xs">Approved by: {loan.approver?.name ?? "—"}</Text>
               {(isMasterAdmin || loan.approved_by === currentUserId) && (
                 <Button
                   size="xs"
-                  color="blue"
+                  color="steel"
                   variant="light"
                   leftSection={<IconLock size={12} />}
                   loading={closingId === loan.id}
@@ -248,10 +258,11 @@ export function AdminActiveLoansTable() {
           ))}
         </Stack>
       ) : (
-        <ScrollArea>
-          <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
-            <Table.Thead style={{ background: "#f8f9fa" }}>
-              <Table.Tr>
+        <div className="table-shell">
+          <ScrollArea>
+            <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
+              <Table.Thead style={{ background: "var(--app-table-head)" }}>
+                <Table.Tr>
                 <Table.Th><Group gap={6}><IconHash size={16} /></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconBox size={16} /><Text fw={800}>Item</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconUser size={16} /><Text fw={800}>Borrower</Text></Group></Table.Th>
@@ -260,8 +271,8 @@ export function AdminActiveLoansTable() {
                 <Table.Th><Group gap={6}><IconCalendarDue size={16} /><Text fw={800}>Due Date</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconSettings size={16} /><Text fw={800}>Actions</Text></Group></Table.Th>
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
+              </Table.Thead>
+              <Table.Tbody>
               {paginated.map((loan, idx) => {
                 const overdue = isOverdue(loan.due_date);
                 return (
@@ -276,7 +287,7 @@ export function AdminActiveLoansTable() {
                     <Table.Td>
                       <Stack gap={2}>
                         <Text fw={600} size="sm">{loan.member.name}</Text>
-                        <Text size="xs" c="dimmed">{loan.member.email}</Text>
+                        <Text size="xs">{loan.member.email}</Text>
                       </Stack>
                     </Table.Td>
                     <Table.Td>{loan.approver?.name ?? "—"}</Table.Td>
@@ -294,14 +305,14 @@ export function AdminActiveLoansTable() {
                           )}
                         </Group>
                       ) : (
-                        <Text c="dimmed">—</Text>
+                        <Text>—</Text>
                       )}
                     </Table.Td>
                     <Table.Td>
                       {(isMasterAdmin || loan.approved_by === currentUserId) ? (
                         <Tooltip label="Close Loan">
                           <ActionIcon
-                            color="blue"
+                            color="steel"
                             variant="light"
                             loading={closingId === loan.id}
                             onClick={() => setConfirmCloseId(loan.id)}
@@ -310,15 +321,16 @@ export function AdminActiveLoansTable() {
                           </ActionIcon>
                         </Tooltip>
                       ) : (
-                        <Text size="xs" c="dimmed">—</Text>
+                        <Text size="xs">—</Text>
                       )}
                     </Table.Td>
                   </Table.Tr>
                 );
               })}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
+        </div>
       )}
 
       {/* PAGINATION */}
@@ -359,7 +371,7 @@ export function AdminActiveLoansTable() {
               Cancel
             </Button>
             <Button
-              color="blue"
+              color="steel"
               loading={closingId !== null}
               onClick={() => confirmCloseId !== null && handleClose(confirmCloseId)}
             >

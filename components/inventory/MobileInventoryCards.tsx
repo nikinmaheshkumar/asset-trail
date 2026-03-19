@@ -50,7 +50,7 @@ export function MobileInventoryCards({
             {/* Header */}
             <Group justify="space-between">
               <Box>
-                <Text size="sm" c="dimmed">
+                <Text size="sm">
                   #{index + 1}
                 </Text>
                 <Text fw={600}>{item.name}</Text>
@@ -65,7 +65,7 @@ export function MobileInventoryCards({
                     ? "yellow"
                     : item.status === "FAULTY"
                     ? "red"
-                    : "gray"
+                    : "brand"
                 }
               >
                 {item.status}
@@ -75,7 +75,7 @@ export function MobileInventoryCards({
             <Divider my="sm" />
 
             {/* Category */}
-            <Text size="sm" c="dimmed">
+            <Text size="sm">
               Category
             </Text>
 
@@ -84,7 +84,7 @@ export function MobileInventoryCards({
             </Badge>
 
             {/* Availability */}
-            <Text size="sm" c="dimmed" mt="xs">
+            <Text size="sm" mt="xs">
               Availability
             </Text>
 
@@ -117,6 +117,7 @@ export function MobileInventoryCards({
                 size="sm"
                 disabled={unavailable}
                 onClick={() => onBorrow(item)}
+                color={unavailable ? undefined : "ink"}
               >
                 {item.quantity_available === 0
                   ? "Out of Stock"
@@ -131,6 +132,7 @@ export function MobileInventoryCards({
                   size="sm"
                   fw={700}
                   variant="light"
+                  color="steel"
                   leftSection={<IconEdit size={16} />}
                   onClick={() => onEdit(item)}
                 >

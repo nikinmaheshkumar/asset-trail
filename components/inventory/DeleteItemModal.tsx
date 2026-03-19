@@ -69,7 +69,7 @@ export function DeleteItemModal({ opened, onClose, item, onDeleted }: Props) {
 
         {item && (
           <Stack gap={4}>
-            <Text size="sm" c="dimmed">
+            <Text size="sm">
               Item
             </Text>
 

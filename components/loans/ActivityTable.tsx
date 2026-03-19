@@ -54,8 +54,8 @@ const actionColors: Record<string, string> = {
   loan_requested: "yellow",
   loan_approved: "green",
   loan_rejected: "red",
-  loan_closed: "gray",
-  member_created: "blue",
+  loan_closed: "brand",
+  member_created: "steel",
   role_changed: "violet",
   item_updated: "cyan",
 };
@@ -117,7 +117,16 @@ export function ActivityTable() {
   return (
     <Stack gap="xl">
       {/* FILTER PANEL */}
-      <Paper withBorder radius="md" p="md" shadow="xs">
+      <Paper
+        withBorder
+        radius="md"
+        p="md"
+        shadow="xs"
+        style={{
+          background: "linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-accent-2-soft) 22%, var(--app-surface)) 100%)",
+          borderColor: "color-mix(in srgb, var(--app-accent-2) 14%, var(--app-border))",
+        }}
+      >
         <Group justify="space-between" mb="md">
           <Title order={5} fw={800}>Filters</Title>
           <Button
@@ -126,6 +135,7 @@ export function ActivityTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
+            color="accent"
           >
             Reset
           </Button>
@@ -154,46 +164,47 @@ export function ActivityTable() {
       {/* TABLE OR MOBILE CARDS */}
       {logs.length === 0 ? (
         <Center py="lg">
-          <Text c="dimmed">No activity records match your filters</Text>
+          <Text>No activity records match your filters</Text>
         </Center>
       ) : isMobile ? (
         <Stack gap="md">
           {logs.map((log) => (
             <Card key={log.id} withBorder radius="md" p="md">
               <Group justify="space-between" mb="xs">
-                <Badge color={actionColors[log.action] ?? "gray"} variant="light">
+                <Badge color={actionColors[log.action] ?? "brand"} variant="light">
                   {actionLabels[log.action] ?? log.action}
                 </Badge>
-                <Text size="xs" c="dimmed">{new Date(log.created_at).toLocaleString()}</Text>
+                <Text size="xs">{new Date(log.created_at).toLocaleString()}</Text>
               </Group>
               <Text size="sm" fw={600}>{log.actor?.name ?? `#${log.actor_id}`}</Text>
               {log.actor?.email && (
-                <Text size="xs" c="dimmed">{log.actor.email}</Text>
+                <Text size="xs">{log.actor.email}</Text>
               )}
               {log.target_id && (
-                <Text size="xs" c="dimmed" mt={4}>Target ID: {log.target_id}</Text>
+                <Text size="xs" mt={4}>Target ID: {log.target_id}</Text>
               )}
             </Card>
           ))}
         </Stack>
       ) : (
-        <ScrollArea>
-          <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
-            <Table.Thead style={{ background: "#f8f9fa" }}>
-              <Table.Tr>
+        <div className="table-shell">
+          <ScrollArea>
+            <Table verticalSpacing="lg" horizontalSpacing="xl" highlightOnHover stickyHeader>
+              <Table.Thead style={{ background: "var(--app-table-head)" }}>
+                <Table.Tr>
                 <Table.Th><Group gap={6}><IconHash size={16} /></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconActivityHeartbeat size={16} /><Text fw={800}>Action</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconUser size={16} /><Text fw={800}>Actor</Text></Group></Table.Th>
                 <Table.Th><Text fw={800}>Target ID</Text></Table.Th>
                 <Table.Th><Group gap={6}><IconCalendar size={16} /><Text fw={800}>Time</Text></Group></Table.Th>
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {logs.map((log, idx) => (
+              </Table.Thead>
+              <Table.Tbody>
+                {logs.map((log, idx) => (
                 <Table.Tr key={log.id}>
                   <Table.Td><Text fw={600}>{(page - 1) * PER_PAGE + idx + 1}</Text></Table.Td>
                   <Table.Td>
-                    <Badge color={actionColors[log.action] ?? "gray"} variant="light">
+                    <Badge color={actionColors[log.action] ?? "brand"} variant="light">
                       {actionLabels[log.action] ?? log.action}
                     </Badge>
                   </Table.Td>
@@ -201,23 +212,24 @@ export function ActivityTable() {
                     <Stack gap={2}>
                       <Text fw={600} size="sm">{log.actor?.name ?? `#${log.actor_id}`}</Text>
                       {log.actor?.email && (
-                        <Text size="xs" c="dimmed">{log.actor.email}</Text>
+                        <Text size="xs">{log.actor.email}</Text>
                       )}
                     </Stack>
                   </Table.Td>
                   <Table.Td>
                     {log.target_id ? (
-                      <Text size="sm" c="dimmed">#{log.target_id}</Text>
+                      <Text size="sm">#{log.target_id}</Text>
                     ) : (
-                      <Text c="dimmed">—</Text>
+                      <Text>—</Text>
                     )}
                   </Table.Td>
                   <Table.Td>{new Date(log.created_at).toLocaleString()}</Table.Td>
                 </Table.Tr>
               ))}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
+        </div>
       )}
 
       {/* PAGINATION */}

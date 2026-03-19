@@ -16,7 +16,7 @@ export function AppShellLayout({ children }: { children: React.ReactNode }) {
       header={{ height: 60 }}
       styles={{
         main: {
-          backgroundColor: "#f3f5ed",
+          backgroundColor: "var(--app-bg)",
         },
       }}
       navbar={{
@@ -31,8 +31,8 @@ export function AppShellLayout({ children }: { children: React.ReactNode }) {
       {/* Header */}
       <AppShell.Header
         style={{
-          backgroundColor: "#181818",
-          borderBottom: "0px solid #e5e7eb",
+          background: "linear-gradient(180deg, var(--app-chrome) 0%, var(--app-chrome-2) 100%)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
         <Group h="100%" px="md" justify="space-between">
@@ -52,7 +52,7 @@ export function AppShellLayout({ children }: { children: React.ReactNode }) {
               justifyContent: "center",
             }}
           >
-            <ThemeIcon size={36} radius="md" variant="light" color="blue">
+            <ThemeIcon size={36} radius="md" variant="light" color="brand">
               <IconPackage size={22} />
             </ThemeIcon>
 
@@ -67,7 +67,13 @@ export function AppShellLayout({ children }: { children: React.ReactNode }) {
       </AppShell.Header>
 
       {/* Sidebar */}
-      <AppShell.Navbar p="md" style={{ backgroundColor: "#181818" }}>
+      <AppShell.Navbar
+        p="md"
+        style={{
+          background: "linear-gradient(180deg, var(--app-chrome) 0%, var(--app-chrome-2) 100%)",
+          borderRight: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
         <Sidebar />
       </AppShell.Navbar>
 

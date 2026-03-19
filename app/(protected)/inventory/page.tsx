@@ -47,6 +47,7 @@ export default function InventoryPage() {
             <Button
               leftSection={<IconPlus size={18} />}
               onClick={() => setAddModalOpen(true)}
+              color="brand"
             >
               Add Item
             </Button>

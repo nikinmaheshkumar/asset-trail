@@ -95,7 +95,7 @@ export function RequestLoanModal({ opened, item, onClose, onRequested }: Props) 
           label="Item"
           value={item?.name ?? ""}
           readOnly
-          styles={{ input: { backgroundColor: "#f8f9fa", cursor: "not-allowed" } }}
+          styles={{ input: { backgroundColor: "var(--app-readonly-bg)", cursor: "not-allowed" } }}
         />
 
         <TextInput
@@ -130,7 +130,7 @@ export function RequestLoanModal({ opened, item, onClose, onRequested }: Props) 
           <Button variant="default" onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={loading}>
+          <Button onClick={handleSubmit} loading={loading} color="ink">
             Submit Request
           </Button>
         </Group>

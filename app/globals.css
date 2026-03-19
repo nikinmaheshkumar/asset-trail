@@ -1,8 +1,117 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* App palette (OKLCH) */
+  --color-deep-twilight-50: oklch(94.13% 0.023 283.26);
+  --color-deep-twilight-100: oklch(88.10% 0.048 285.37);
+  --color-deep-twilight-200: oklch(76.28% 0.098 283.17);
+  --color-deep-twilight-300: oklch(64.33% 0.153 280.79);
+  --color-deep-twilight-400: oklch(53.16% 0.205 276.24);
+  --color-deep-twilight-500: oklch(43.74% 0.249 269.51);
+  --color-deep-twilight-600: oklch(37.44% 0.208 269.96);
+  --color-deep-twilight-700: oklch(30.76% 0.166 270.78);
+  --color-deep-twilight-800: oklch(23.90% 0.120 272.15);
+  --color-deep-twilight-900: oklch(16.46% 0.069 275.71);
+  --color-deep-twilight-950: oklch(14.20% 0.051 277.68);
+
+  --color-beige-50: oklch(97.68% 0.019 113.33);
+  --color-beige-100: oklch(95.32% 0.036 115.60);
+  --color-beige-200: oklch(90.70% 0.071 116.37);
+  --color-beige-300: oklch(86.15% 0.105 117.23);
+  --color-beige-400: oklch(81.69% 0.136 118.21);
+  --color-beige-500: oklch(77.34% 0.159 119.40);
+  --color-beige-600: oklch(65.60% 0.133 119.32);
+  --color-beige-700: oklch(53.31% 0.106 119.18);
+  --color-beige-800: oklch(40.26% 0.077 118.94);
+  --color-beige-900: oklch(26.04% 0.045 118.36);
+  --color-beige-950: oklch(21.33% 0.034 116.71);
+
+  --color-steel-blue-50: oklch(96.12% 0.007 233.64);
+  --color-steel-blue-100: oklch(92.25% 0.014 238.02);
+  --color-steel-blue-200: oklch(84.59% 0.029 234.92);
+  --color-steel-blue-300: oklch(76.62% 0.044 236.46);
+  --color-steel-blue-400: oklch(68.79% 0.060 235.95);
+  --color-steel-blue-500: oklch(60.68% 0.075 237.63);
+  --color-steel-blue-600: oklch(51.82% 0.062 236.89);
+  --color-steel-blue-700: oklch(42.31% 0.050 237.86);
+  --color-steel-blue-800: oklch(32.50% 0.035 236.54);
+  --color-steel-blue-900: oklch(21.59% 0.020 239.39);
+  --color-steel-blue-950: oklch(18.20% 0.015 239.70);
+
+  --color-smoky-rose-50: oklch(96.05% 0.003 17.21);
+  --color-smoky-rose-100: oklch(91.97% 0.005 17.26);
+  --color-smoky-rose-200: oklch(83.63% 0.013 17.43);
+  --color-smoky-rose-300: oklch(75.25% 0.020 17.60);
+  --color-smoky-rose-400: oklch(66.65% 0.027 17.84);
+  --color-smoky-rose-500: oklch(57.67% 0.037 18.27);
+  --color-smoky-rose-600: oklch(49.32% 0.029 18.18);
+  --color-smoky-rose-700: oklch(40.45% 0.023 18.17);
+  --color-smoky-rose-800: oklch(31.06% 0.018 18.15);
+  --color-smoky-rose-900: oklch(21.06% 0.008 17.81);
+  --color-smoky-rose-950: oklch(17.80% 0.007 17.80);
+
+  --color-vibrant-coral-50: oklch(94.78% 0.023 17.56);
+  --color-vibrant-coral-100: oklch(89.56% 0.046 18.05);
+  --color-vibrant-coral-200: oklch(79.51% 0.100 19.53);
+  --color-vibrant-coral-300: oklch(70.57% 0.154 21.79);
+  --color-vibrant-coral-400: oklch(63.46% 0.205 25.20);
+  --color-vibrant-coral-500: oklch(59.10% 0.233 28.41);
+  --color-vibrant-coral-600: oklch(50.17% 0.197 28.29);
+  --color-vibrant-coral-700: oklch(40.68% 0.157 27.97);
+  --color-vibrant-coral-800: oklch(30.80% 0.116 27.45);
+  --color-vibrant-coral-900: oklch(19.95% 0.068 25.83);
+  --color-vibrant-coral-950: oklch(16.23% 0.054 25.50);
+
+  /* App tokens (premium scheme) */
+  /* Fallbacks first (for browsers without OKLCH/color-mix support) */
+  --app-bg: #f3f5ed;
+  --app-surface: #fffdf7;
+  --app-chrome: #0f1b2d;
+  --app-chrome-2: #14243c;
+  --app-text: #111827;
+  --app-text-muted: #111827;
+  --app-table-head: #14243c;
+  --app-table-head-border: #e6e3db;
+  --app-table-head-ink: #ffffff;
+  --app-table-head-icon: #eef4fb;
+  --app-readonly-bg: #f8f9fa;
+  --app-border: #e6e3db;
+
+  /* Preferred values */
+  --app-bg: var(--color-beige-50);
+  --app-surface: color-mix(in srgb, var(--color-beige-50) 78%, white);
+  --app-chrome: var(--color-steel-blue-950);
+  --app-chrome-2: var(--color-steel-blue-900);
+  --app-text: oklch(0.155 0.02 255);
+  --app-text-muted: var(--app-text);
+  --app-table-head: #0f181e;
+  --app-table-head-border: color-mix(in srgb, var(--app-chrome) 18%, var(--app-border));
+  --app-table-head-ink: white;
+  --app-table-head-icon: color-mix(in srgb, white 86%, var(--app-table-head));
+  --app-readonly-bg: color-mix(in srgb, var(--color-beige-50) 84%, white);
+  --app-border: color-mix(in srgb, var(--color-beige-200) 55%, black 10%);
+
+  /* Brand-derived accents */
+  --app-accent: #a01820;
+  --app-accent-soft: var(--color-vibrant-coral-50);
+  --app-accent-ink: #7f1117;
+  --app-accent-2: #703888;
+  --app-accent-2-soft: var(--color-deep-twilight-50);
+
+  /* Semantic accents */
+  --app-success: #16a34a;
+  --app-warning: #d97706;
+  --app-danger: #dc2626;
+  --app-info: #2563eb;
+
+  /* Back-compat: ensure app uses warm background */
+  --background: var(--app-bg);
+  --foreground: var(--app-text);
+
+  /* Mantine CSS variables for stronger contrast */
+  --mantine-color-body: var(--app-bg);
+  --mantine-color-text: var(--app-text);
+  --mantine-color-dimmed: var(--app-text);
 }
 
 @theme inline {
@@ -12,15 +121,107 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  font-weight: 600;
+  font-kerning: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rounded table containers (desktop tables) */
+.table-shell {
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--app-surface);
+}
+
+.table-shell .mantine-ScrollArea-root,
+.table-shell .mantine-ScrollArea-viewport,
+.table-shell .mantine-Table-root,
+.table-shell .mantine-Table-table {
+  border-radius: inherit;
+}
+
+.table-shell .mantine-Table-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Tables: bigger, bolder, high-contrast */
+.mantine-Table-root {
+  font-size: 1.0625rem;
+  border-radius: var(--mantine-radius-md, 12px);
+  overflow: hidden;
+}
+
+.mantine-Table-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.mantine-Table-root th,
+.mantine-Table-root td {
+  color: var(--app-text);
+}
+
+.mantine-Table-root th {
+  font-weight: 800;
+}
+
+/* Table header: dark chrome + clear hierarchy (robust selectors) */
+.mantine-Table-root thead,
+.mantine-Table-root thead tr,
+.mantine-Table-root thead th,
+.mantine-Table-thead,
+.mantine-Table-thead tr,
+.mantine-Table-thead th,
+.mantine-Table-th {
+  background: var(--app-table-head) !important;
+}
+
+.mantine-Table-root thead th,
+.mantine-Table-thead th,
+.mantine-Table-th {
+  border-bottom: 1px solid color-mix(in srgb, white 14%, transparent) !important;
+  color: var(--app-table-head-ink) !important;
+}
+
+.mantine-Table-root thead th svg,
+.mantine-Table-thead th svg,
+.mantine-Table-th svg {
+  color: var(--app-table-head-icon) !important;
+}
+
+/* Dashboard: table header matches table rows (no colored head) */
+.dashboard-root .mantine-Table-root thead,
+.dashboard-root .mantine-Table-root thead tr,
+.dashboard-root .mantine-Table-root thead th,
+.dashboard-root .mantine-Table-thead,
+.dashboard-root .mantine-Table-thead tr,
+.dashboard-root .mantine-Table-thead th,
+.dashboard-root .mantine-Table-th {
+  background: transparent !important;
+}
+
+.dashboard-root .mantine-Table-root thead th,
+.dashboard-root .mantine-Table-thead th,
+.dashboard-root .mantine-Table-th {
+  border-bottom: 1px solid var(--app-border) !important;
+  color: var(--app-text) !important;
+}
+
+.dashboard-root .mantine-Table-root thead th svg,
+.dashboard-root .mantine-Table-thead th svg,
+.dashboard-root .mantine-Table-th svg {
+  color: var(--app-text) !important;
+}
+
+/* Accessible focus styles (MVP polish) */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-accent) 70%, white);
+  outline-offset: 2px;
 }

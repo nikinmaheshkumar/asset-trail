@@ -151,7 +151,16 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
     <Stack gap="xl">
 
       {/* FILTER PANEL */}
-      <Paper withBorder radius="md" p="md" shadow="xs">
+      <Paper
+        withBorder
+        radius="md"
+        p="md"
+        shadow="xs"
+        style={{
+          background: "linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-accent-soft) 32%, var(--app-surface)) 100%)",
+          borderColor: "color-mix(in srgb, var(--app-accent) 18%, var(--app-border))",
+        }}
+      >
         <Group justify="space-between" mb="md">
           <Title order={5} fw={800}>
             Filters
@@ -163,6 +172,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
+            color="accent"
           >
             Reset
           </Button>
@@ -213,9 +223,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
       {/* TABLE OR CARDS */}
       {paginatedItems.length === 0 ? (
         <Center py="lg">
-          <Text c="dimmed">
-            No items match your filters
-          </Text>
+          <Text>No items match your filters</Text>
         </Center>
       ) : isMobile ? (
         <MobileInventoryCards
