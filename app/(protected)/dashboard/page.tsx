@@ -32,20 +32,7 @@ import {
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { loanStatusColor, loanStatusLabel } from "@/lib/status";
-
-const roleColors: Record<string, string> = {
-  MASTER_ADMIN: "red",
-  BOARD: "accent",
-  SENIOR_CORE: "yellow",
-  JUNIOR_CORE: "yellow.6",
-};
-
-const roleLabels: Record<string, string> = {
-  MASTER_ADMIN: "Master Admin",
-  BOARD: "Board",
-  SENIOR_CORE: "Senior Core",
-  JUNIOR_CORE: "Junior Core",
-};
+import { roleColor, roleLabel, PRIMARY_CTA_COLOR, SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 // loan status labels/colors normalized in lib/status
 
@@ -100,7 +87,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
   const { stats, pendingRequests, activeLoans, lowStockItems } = data;
 
   const statCards = [
-    { label: "Total Items", value: stats.totalItems, icon: IconBox, color: "accent" },
+    { label: "Total Items", value: stats.totalItems, icon: IconBox, color: SECONDARY_ACTION_COLOR },
     { label: "Active Loans", value: stats.activeLoans, icon: IconClipboardList, color: "green" },
     { label: "Pending Requests", value: stats.pendingRequests, icon: IconClock, color: "yellow" },
     { label: "Low Stock Items", value: stats.lowStockItems, icon: IconAlertTriangle, color: "red" },
@@ -112,15 +99,24 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
       <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="md">
         {statCards.map((card) => {
           const Icon = card.icon;
+          const topBorderColor = `var(--mantine-color-${card.color}-6)`;
           return (
-            <Card key={card.label} withBorder radius="md" p="md">
+            <Card
+              key={card.label}
+              withBorder
+              radius="md"
+              p="md"
+              style={{
+                borderTop: `4px solid ${topBorderColor}`,
+              }}
+            >
               <Group justify="space-between" mb="xs">
                 <Text size="sm" fw={800}>{card.label}</Text>
                 <ThemeIcon color={card.color} variant="light" size="md" radius="md">
                   <Icon size={16} />
                 </ThemeIcon>
               </Group>
-              <Text fw={700} size="xl">{card.value}</Text>
+              <Text fw={900} fz={34} lh={1.1}>{card.value}</Text>
             </Card>
           );
         })}
@@ -136,15 +132,16 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
               </ThemeIcon>
               <Title order={5}>Pending Requests</Title>
             </Group>
-            <Button
-              component={Link}
-              href="/admin/requests"
-              size="xs"
-              variant="light"
-              rightSection={<IconArrowRight size={14} />}
-            >
-              View All
-            </Button>
+             <Button
+               component={Link}
+               href="/admin/requests"
+               size="xs"
+               variant="light"
+               rightSection={<IconArrowRight size={14} />}
+               color={SECONDARY_ACTION_COLOR}
+             >
+               View All
+             </Button>
           </Group>
           <Divider mb="sm" />
           {pendingRequests.length === 0 ? (
@@ -165,8 +162,8 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
                       <Stack gap={2}>
                         <Text size="sm" fw={500}>{req.member?.name ?? "—"}</Text>
                         {req.member?.role && (
-                          <Badge size="xs" color={roleColors[req.member.role] ?? "brand"} variant="light">
-                            {roleLabels[req.member.role] ?? req.member.role}
+                          <Badge size="xs" color={roleColor(req.member.role)} variant="light">
+                            {roleLabel(req.member.role)}
                           </Badge>
                         )}
                       </Stack>
@@ -191,7 +188,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
         <Paper withBorder p="md" radius="md">
           <Group justify="space-between" mb="sm">
             <Group>
-              <ThemeIcon color="accent" variant="light" size="md" radius="md">
+              <ThemeIcon color={SECONDARY_ACTION_COLOR} variant="light" size="md" radius="md">
                 <IconClipboardList size={16} />
               </ThemeIcon>
               <Title order={5}>Active Loans</Title>
@@ -202,6 +199,7 @@ function AdminDashboardView({ data }: { data: AdminDashboard }) {
               size="xs"
               variant="light"
               rightSection={<IconArrowRight size={14} />}
+              color={SECONDARY_ACTION_COLOR}
             >
               View All
             </Button>
@@ -322,11 +320,11 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
         {/* My Active Loans */}
         <Paper withBorder p="md" radius="md">
           <Group mb="sm">
-            <ThemeIcon color="accent" variant="light" size="md" radius="md">
+            <ThemeIcon color={PRIMARY_CTA_COLOR} variant="light" size="md" radius="md">
               <IconClipboardList size={16} />
             </ThemeIcon>
             <Title order={5}>My Active Loans</Title>
-            <Badge color="accent" variant="light">{myActiveLoans.length}</Badge>
+            <Badge color={PRIMARY_CTA_COLOR} variant="light">{myActiveLoans.length}</Badge>
           </Group>
           <Divider mb="sm" />
           {myActiveLoans.length === 0 ? (
@@ -378,7 +376,14 @@ function UserDashboardView({ data }: { data: UserDashboard }) {
             </Table>
           )}
           <Group justify="flex-end" mt="sm">
-            <Button component={Link} href="/my-loans" size="xs" variant="light" rightSection={<IconArrowRight size={14} />}>
+            <Button
+              component={Link}
+              href="/my-loans"
+              size="xs"
+              variant="light"
+              rightSection={<IconArrowRight size={14} />}
+              color={SECONDARY_ACTION_COLOR}
+            >
               View All My Loans
             </Button>
           </Group>
@@ -491,7 +496,7 @@ export default function Dashboard() {
   return (
     <Stack gap="xl" p="md" className="dashboard-root">
       <Group>
-        <ThemeIcon color={isAdmin ? "accent" : "green"} variant="light" size="lg" radius="md">
+        <ThemeIcon color={isAdmin ? PRIMARY_CTA_COLOR : "green"} variant="light" size="lg" radius="md">
           {isAdmin ? <IconUsers size={20} /> : <IconBolt size={20} />}
         </ThemeIcon>
         <div>

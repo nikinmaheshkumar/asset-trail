@@ -95,8 +95,9 @@
   --app-accent: #a01820;
   --app-accent-soft: var(--color-vibrant-coral-50);
   --app-accent-ink: #7f1117;
-  --app-accent-2: #703888;
-  --app-accent-2-soft: var(--color-deep-twilight-50);
+  /* Secondary tint: keep in the same family as brand (avoid extra hue accents) */
+  --app-accent-2: var(--app-accent);
+  --app-accent-2-soft: var(--app-accent-soft);
 
   /* Semantic accents */
   --app-success: #16a34a;

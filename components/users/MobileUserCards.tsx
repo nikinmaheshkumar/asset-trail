@@ -17,6 +17,7 @@ import {
 } from "@tabler/icons-react";
 
 import { modals } from "@mantine/modals";
+import { roleColor, roleLabel } from "@/lib/ui";
 
 type Member = {
   id: number;
@@ -31,13 +32,6 @@ type Props = {
   onDelete: (id: number) => void;
   onResetPassword: (id: number, name: string) => Promise<string>;
   currentUserId?: number;
-};
-
-const roleLabels: Record<string, string> = {
-  MASTER_ADMIN: "Master Admin",
-  BOARD: "Board",
-  SENIOR_CORE: "Senior Core",
-  JUNIOR_CORE: "Junior Core",
 };
 
 export function MobileUsersCards({
@@ -113,7 +107,7 @@ export function MobileUsersCards({
                   <Text fw={600}>{member.name}</Text>
 
                   {isCurrentUser && (
-                    <Badge size="xs" color="green">
+                    <Badge size="xs" color="steel">
                       You
                     </Badge>
                   )}
@@ -127,9 +121,9 @@ export function MobileUsersCards({
 
               <Menu position="bottom-end">
 
-                <Menu.Target>
-                  <ActionIcon variant="subtle">
-                    <IconDotsVertical size={18} />
+              <Menu.Target>
+                  <ActionIcon variant="light" color="ink" size="lg">
+                    <IconDotsVertical size={20} stroke={2.2} />
                   </ActionIcon>
                 </Menu.Target>
 
@@ -187,19 +181,12 @@ export function MobileUsersCards({
             <Group mt="sm">
 
               <Badge
+                size="sm"
                 variant="light"
                 fw={600}
-                color={
-                  member.role === "MASTER_ADMIN"
-                    ? "red"
-                    : member.role === "BOARD"
-                    ? "steel"
-                    : member.role === "SENIOR_CORE"
-                    ? "yellow.7"
-                    : "yellow.6"
-                }
+                color={roleColor(member.role)}
               >
-                {roleLabels[member.role]}
+                {roleLabel(member.role)}
               </Badge>
 
             </Group>

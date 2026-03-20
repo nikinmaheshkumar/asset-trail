@@ -27,7 +27,7 @@ export async function PATCH(
 
     const existingLoan = await prisma.loan.findUnique({
       where: { id: loanId },
-      select: { id: true, item_id: true, status: true, approved_by: true },
+      select: { id: true, item_id: true, status: true, approved_by: true, quantity: true },
     });
 
     if (!existingLoan) {
@@ -60,7 +60,7 @@ export async function PATCH(
 
       await tx.item.update({
         where: { id: existingLoan.item_id },
-        data: { quantity_available: { increment: 1 } },
+        data: { quantity_available: { increment: existingLoan.quantity } },
       });
 
       return loan;

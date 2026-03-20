@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Center, Loader } from "@mantine/core";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ActivityTable } from "@/components/loans/ActivityTable";
+import { IconHistory } from "@tabler/icons-react";
 
 export default function AdminActivityPage() {
   const { data: session, status } = useSession();
@@ -32,6 +33,7 @@ export default function AdminActivityPage() {
       <PageHeader
         title="Activity Log"
         subtitle="Track all system actions and audit trail"
+        icon={<IconHistory size={20} />}
       />
       <ActivityTable />
     </>

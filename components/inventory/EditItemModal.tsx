@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { Item } from "./InventoryTable";
+import { PRIMARY_CTA_COLOR } from "@/lib/ui";
 
 type Props = {
   opened: boolean;
@@ -182,7 +183,7 @@ export function EditItemModal({ opened, onClose, item, onUpdated }: Props) {
           loading={loading}
           disabled={invalidQuantity}
           onClick={handleUpdate}
-          color="steel"
+          color={PRIMARY_CTA_COLOR}
         >
           Update Item
         </Button>

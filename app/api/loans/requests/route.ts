@@ -18,6 +18,7 @@ export async function GET() {
         id: true,
         item_id: true,
         member_id: true,
+        quantity: true,
         requested_at: true,
         purpose: true,
         status: true,

@@ -21,6 +21,7 @@ import {
   ScrollArea,
   ActionIcon,
   Tooltip,
+  Modal,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -37,30 +38,24 @@ import {
   IconSettings,
   IconHash,
 } from "@tabler/icons-react";
+import {
+  APPROVE_ACTION_COLOR,
+  REJECT_ACTION_COLOR,
+  roleColor,
+  roleLabel,
+  SECONDARY_ACTION_COLOR,
+} from "@/lib/ui";
 
 type LoanRequest = {
   id: number;
   item_id: number;
   member_id: number;
+  quantity: number;
   requested_at: string;
   purpose: string;
   status: string;
   item: { id: number; name: string; category: string; quantity_available: number };
   member: { id: number; name: string; email: string; role: string };
-};
-
-const roleColors: Record<string, string> = {
-  MASTER_ADMIN: "red",
-  BOARD: "accent",
-  SENIOR_CORE: "yellow.7",
-  JUNIOR_CORE: "yellow.6",
-};
-
-const roleLabels: Record<string, string> = {
-  MASTER_ADMIN: "Master Admin",
-  BOARD: "Board",
-  SENIOR_CORE: "Senior Core",
-  JUNIOR_CORE: "Junior Core",
 };
 
 const ITEMS_PER_PAGE = 8;
@@ -72,6 +67,7 @@ export function AdminRequestsTable() {
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [confirm, setConfirm] = useState<{ id: number; action: "approve" | "reject" } | null>(null);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -101,7 +97,7 @@ export function AdminRequestsTable() {
         notifications.show({ color: "red", title: "Error", message: data.error ?? "Approve failed" });
         return;
       }
-      notifications.show({ color: "green", title: "Approved", message: "Loan has been approved" });
+      notifications.show({ color: APPROVE_ACTION_COLOR, title: "Approved", message: "Loan has been approved" });
       fetchRequests();
     } catch {
       notifications.show({ color: "red", title: "Error", message: "Approve failed" });
@@ -119,12 +115,21 @@ export function AdminRequestsTable() {
         notifications.show({ color: "red", title: "Error", message: data.error ?? "Reject failed" });
         return;
       }
-      notifications.show({ color: "orange", title: "Rejected", message: "Loan has been rejected" });
+      notifications.show({ color: REJECT_ACTION_COLOR, title: "Rejected", message: "Loan has been rejected" });
       fetchRequests();
     } catch {
       notifications.show({ color: "red", title: "Error", message: "Reject failed" });
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  async function handleConfirm() {
+    if (!confirm) return;
+    if (confirm.action === "approve") {
+      await handleApprove(confirm.id);
+    } else {
+      await handleReject(confirm.id);
     }
   }
 
@@ -187,7 +192,7 @@ export function AdminRequestsTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={() => { handleReset(); fetchRequests(); }}
             disabled={!filtersActive}
-            color="accent"
+            color={SECONDARY_ACTION_COLOR}
           >
             Reset
           </Button>
@@ -229,8 +234,8 @@ export function AdminRequestsTable() {
             <Card key={req.id} withBorder radius="md" p="md">
               <Group justify="space-between" mb="xs">
                 <Text fw={700}>{req.item.name}</Text>
-                <Badge color={roleColors[req.member.role] ?? "brand"} variant="light">
-                  {roleLabels[req.member.role] ?? req.member.role}
+                <Badge color={roleColor(req.member.role)} variant="light">
+                  {roleLabel(req.member.role)}
                 </Badge>
               </Group>
               <Text size="sm" fw={500}>{req.member.name}</Text>
@@ -244,20 +249,20 @@ export function AdminRequestsTable() {
               <Group gap="xs" mt="sm">
                 <Button
                   size="xs"
-                  color="green"
-                  leftSection={<IconCheck size={12} />}
+                  color={APPROVE_ACTION_COLOR}
+                  leftSection={<IconCheck size={14} />}
                   loading={actionLoading === req.id}
-                  onClick={() => handleApprove(req.id)}
+                  onClick={() => setConfirm({ id: req.id, action: "approve" })}
                 >
                   Approve
                 </Button>
                 <Button
                   size="xs"
-                  color="red"
+                  color={REJECT_ACTION_COLOR}
                   variant="light"
-                  leftSection={<IconX size={12} />}
+                  leftSection={<IconX size={14} />}
                   loading={actionLoading === req.id}
-                  onClick={() => handleReject(req.id)}
+                  onClick={() => setConfirm({ id: req.id, action: "reject" })}
                 >
                   Reject
                 </Button>
@@ -287,7 +292,10 @@ export function AdminRequestsTable() {
                   <Table.Td>
                     <Stack gap={2}>
                       <Text fw={700}>{req.item.name}</Text>
-                      <Badge variant="light" size="sm">{req.item.category}</Badge>
+                      <Group gap="xs">
+                        <Badge variant="light" size="sm">{req.item.category}</Badge>
+                        <Badge variant="light" size="sm" color="ink">Qty: {req.quantity}</Badge>
+                      </Group>
                     </Stack>
                   </Table.Td>
                   <Table.Td>
@@ -297,8 +305,8 @@ export function AdminRequestsTable() {
                     </Stack>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={roleColors[req.member.role] ?? "brand"} variant="light" fw={600}>
-                      {roleLabels[req.member.role] ?? req.member.role}
+                    <Badge color={roleColor(req.member.role)} variant="light" fw={600}>
+                      {roleLabel(req.member.role)}
                     </Badge>
                   </Table.Td>
                   <Table.Td>{new Date(req.requested_at).toLocaleDateString()}</Table.Td>
@@ -309,22 +317,24 @@ export function AdminRequestsTable() {
                     <Group gap="xs">
                       <Tooltip label="Approve">
                         <ActionIcon
-                          color="green"
+                          color={APPROVE_ACTION_COLOR}
                           variant="light"
+                          size="lg"
                           loading={actionLoading === req.id}
-                          onClick={() => handleApprove(req.id)}
+                          onClick={() => setConfirm({ id: req.id, action: "approve" })}
                         >
-                          <IconCheck size={16} />
+                          <IconCheck size={18} />
                         </ActionIcon>
                       </Tooltip>
                       <Tooltip label="Reject">
                         <ActionIcon
-                          color="red"
+                          color={REJECT_ACTION_COLOR}
                           variant="light"
+                          size="lg"
                           loading={actionLoading === req.id}
-                          onClick={() => handleReject(req.id)}
+                          onClick={() => setConfirm({ id: req.id, action: "reject" })}
                         >
-                          <IconX size={16} />
+                          <IconX size={18} />
                         </ActionIcon>
                       </Tooltip>
                     </Group>
@@ -336,6 +346,36 @@ export function AdminRequestsTable() {
           </ScrollArea>
         </div>
       )}
+
+      {/* CONFIRM ACTION MODAL */}
+      <Modal
+        opened={confirm !== null}
+        onClose={() => setConfirm(null)}
+        title={<Text fw={700} size="lg">Confirm Action</Text>}
+        centered
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            {confirm?.action === "approve"
+              ? "Approve this loan request?"
+              : "Reject this loan request?"}
+          </Text>
+          <Group justify="flex-end" mt="sm">
+            <Button variant="default" onClick={() => setConfirm(null)} disabled={actionLoading !== null}>
+              Cancel
+            </Button>
+            <Button
+              color={confirm?.action === "approve" ? APPROVE_ACTION_COLOR : REJECT_ACTION_COLOR}
+              variant={confirm?.action === "approve" ? "filled" : "light"}
+              loading={actionLoading !== null}
+              onClick={() => confirm && handleConfirm().finally(() => setConfirm(null))}
+            >
+              {confirm?.action === "approve" ? "Approve" : "Reject"}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       {/* PAGINATION */}
       {totalPages > 1 && (

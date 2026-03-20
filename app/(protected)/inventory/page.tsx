@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconBox } from "@tabler/icons-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { InventoryTable, Item } from "@/components/inventory/InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
@@ -42,6 +42,7 @@ export default function InventoryPage() {
       <PageHeader
         title="Inventory"
         subtitle="Manage and track all items"
+        icon={<IconBox size={20} />}
         rightSection={
           <RoleGuard role={userRole} allow={["MASTER_ADMIN", "BOARD"]}>
             <Button

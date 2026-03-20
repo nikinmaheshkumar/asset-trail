@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Center, Loader } from "@mantine/core";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AdminActiveLoansTable } from "@/components/loans/AdminActiveLoansTable";
+import { IconClockCheck } from "@tabler/icons-react";
 
 export default function AdminLoansPage() {
   const { data: session, status } = useSession();
@@ -32,6 +33,7 @@ export default function AdminLoansPage() {
       <PageHeader
         title="Active Loans"
         subtitle="Manage currently active loan transactions"
+        icon={<IconClockCheck size={20} />}
       />
       <AdminActiveLoansTable />
     </>

@@ -19,6 +19,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconSearch, IconRefresh } from "@tabler/icons-react";
 import { DesktopUsersTable } from "./DesktopUsersTable";
 import { MobileUsersCards } from "./MobileUserCards";
+import { SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 export type Member = {
   id: number;
@@ -107,7 +108,7 @@ export function UsersTable({
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
-            color="accent"
+            color={SECONDARY_ACTION_COLOR}
           >
             Reset
           </Button>

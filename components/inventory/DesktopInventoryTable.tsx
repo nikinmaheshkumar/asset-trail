@@ -23,6 +23,7 @@ import { Item } from "./InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useSession } from "next-auth/react";
 import { itemStatusColor, itemStatusLabel } from "@/lib/status";
+import { PRIMARY_CTA_COLOR, SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 type Props = {
   items: Item[];
@@ -178,7 +179,7 @@ export function DesktopInventoryTable({
                       size="sm"
                       disabled={unavailable}
                       onClick={() => onBorrow(item)}
-                      color={unavailable ? undefined : "ink"}
+                      color={unavailable ? undefined : PRIMARY_CTA_COLOR}
                     >
                       {item.quantity_available === 0
                         ? "Out of Stock"
@@ -195,7 +196,7 @@ export function DesktopInventoryTable({
                         size="sm"
                         fw={700}
                         variant="light"
-                        color="steel"
+                        color={SECONDARY_ACTION_COLOR}
                         px="md"
                         leftSection={<IconEdit size={16} />}
                         onClick={() => onEdit(item)}

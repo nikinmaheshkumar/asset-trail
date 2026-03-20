@@ -61,6 +61,7 @@ model Loan {
   id           Int        @id @default(autoincrement())
   item_id      Int
   member_id    Int
+  quantity     Int        @default(1)
   requested_at DateTime   @default(now())
   approved_at  DateTime?
   closed_at    DateTime?

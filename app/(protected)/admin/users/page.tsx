@@ -5,7 +5,7 @@ import { Button, Center, Loader } from "@mantine/core";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconUser } from "@tabler/icons-react";
 import { UsersTable } from "@/components/users/UsersTable";
 import { useDisclosure } from "@mantine/hooks";
 import { AddMemberModal } from "@/components/users/AddMemberModal";
@@ -97,6 +97,7 @@ export default function UsersPage() {
       <PageHeader
         title="Members"
         subtitle="Manage system users and permissions"
+        icon={<IconUser size={20} />}
         rightSection={
           <Button leftSection={<IconPlus size={16} />} onClick={open}>
             Add Member

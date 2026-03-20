@@ -40,11 +40,13 @@ import {
   IconHash,
   IconAlertTriangle,
 } from "@tabler/icons-react";
+import { SECONDARY_ACTION_COLOR, PRIMARY_CTA_COLOR } from "@/lib/ui";
 
 type ActiveLoan = {
   id: number;
   item_id: number;
   member_id: number;
+  quantity: number;
   requested_at: string;
   approved_at?: string;
   due_date?: string;
@@ -101,7 +103,7 @@ export function AdminActiveLoansTable() {
         notifications.show({ color: "red", title: "Error", message: data.error ?? "Close failed" });
         return;
       }
-      notifications.show({ color: "steel", title: "Closed", message: "Loan has been closed" });
+      notifications.show({ color: PRIMARY_CTA_COLOR, title: "Closed", message: "Loan has been closed" });
       fetchLoans();
     } catch {
       notifications.show({ color: "red", title: "Error", message: "Close failed" });
@@ -184,7 +186,7 @@ export function AdminActiveLoansTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={() => { handleReset(); fetchLoans(); }}
             disabled={!filtersActive}
-            color="accent"
+            color={SECONDARY_ACTION_COLOR}
           >
             Reset
           </Button>
@@ -244,9 +246,9 @@ export function AdminActiveLoansTable() {
               {(isMasterAdmin || loan.approved_by === currentUserId) && (
                 <Button
                   size="xs"
-                  color="steel"
+                  color={PRIMARY_CTA_COLOR}
                   variant="light"
-                  leftSection={<IconLock size={12} />}
+                  leftSection={<IconLock size={14} />}
                   loading={closingId === loan.id}
                   onClick={() => setConfirmCloseId(loan.id)}
                   mt="sm"
@@ -281,7 +283,10 @@ export function AdminActiveLoansTable() {
                     <Table.Td>
                       <Stack gap={2}>
                         <Text fw={700}>{loan.item.name}</Text>
-                        <Badge variant="light" size="sm">{loan.item.category}</Badge>
+                        <Group gap="xs">
+                          <Badge variant="light" size="sm">{loan.item.category}</Badge>
+                          <Badge variant="light" size="sm" color="ink">Qty: {loan.quantity}</Badge>
+                        </Group>
                       </Stack>
                     </Table.Td>
                     <Table.Td>
@@ -312,12 +317,13 @@ export function AdminActiveLoansTable() {
                       {(isMasterAdmin || loan.approved_by === currentUserId) ? (
                         <Tooltip label="Close Loan">
                           <ActionIcon
-                            color="steel"
+                            color={PRIMARY_CTA_COLOR}
                             variant="light"
+                            size="lg"
                             loading={closingId === loan.id}
                             onClick={() => setConfirmCloseId(loan.id)}
                           >
-                            <IconLock size={16} />
+                            <IconLock size={18} />
                           </ActionIcon>
                         </Tooltip>
                       ) : (
@@ -371,7 +377,7 @@ export function AdminActiveLoansTable() {
               Cancel
             </Button>
             <Button
-              color="steel"
+              color={PRIMARY_CTA_COLOR}
               loading={closingId !== null}
               onClick={() => confirmCloseId !== null && handleClose(confirmCloseId)}
             >

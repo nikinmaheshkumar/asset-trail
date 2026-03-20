@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Center, Loader } from "@mantine/core";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AdminRequestsTable } from "@/components/loans/AdminRequestsTable";
+import { IconFileText } from "@tabler/icons-react";
 
 export default function AdminRequestsPage() {
   const { data: session, status } = useSession();
@@ -32,6 +33,7 @@ export default function AdminRequestsPage() {
       <PageHeader
         title="Loan Requests"
         subtitle="Review and action pending asset loan requests"
+        icon={<IconFileText size={20} />}
       />
       <AdminRequestsTable />
     </>

@@ -23,6 +23,7 @@ import { DesktopInventoryTable } from "./DesktopInventoryTable";
 import { MobileInventoryCards } from "./MobileInventoryCards";
 import { RequestLoanModal } from "@/components/loans/RequestLoanModal";
 import { ITEM_STATUS_LABELS, itemStatusLabel } from "@/lib/status";
+import { SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 export type Item = {
   id: number
@@ -186,7 +187,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
-            color="accent"
+            color={SECONDARY_ACTION_COLOR}
           >
             Reset
           </Button>

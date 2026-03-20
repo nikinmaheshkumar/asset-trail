@@ -30,6 +30,7 @@ import {
   IconCalendar,
   IconHash,
 } from "@tabler/icons-react";
+import { activityActionColor, SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 type ActivityLog = {
   id: number;
@@ -48,16 +49,6 @@ const actionLabels: Record<string, string> = {
   member_created: "Member Created",
   role_changed: "Role Changed",
   item_updated: "Item Updated",
-};
-
-const actionColors: Record<string, string> = {
-  loan_requested: "yellow",
-  loan_approved: "green",
-  loan_rejected: "red",
-  loan_closed: "brand",
-  member_created: "steel",
-  role_changed: "violet",
-  item_updated: "cyan",
 };
 
 const PER_PAGE = 20;
@@ -135,7 +126,7 @@ export function ActivityTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
-            color="accent"
+            color={SECONDARY_ACTION_COLOR}
           >
             Reset
           </Button>
@@ -171,7 +162,7 @@ export function ActivityTable() {
           {logs.map((log) => (
             <Card key={log.id} withBorder radius="md" p="md">
               <Group justify="space-between" mb="xs">
-                <Badge color={actionColors[log.action] ?? "brand"} variant="light">
+                <Badge color={activityActionColor(log.action)} variant="light">
                   {actionLabels[log.action] ?? log.action}
                 </Badge>
                 <Text size="xs">{new Date(log.created_at).toLocaleString()}</Text>
@@ -204,7 +195,7 @@ export function ActivityTable() {
                 <Table.Tr key={log.id}>
                   <Table.Td><Text fw={600}>{(page - 1) * PER_PAGE + idx + 1}</Text></Table.Td>
                   <Table.Td>
-                    <Badge color={actionColors[log.action] ?? "brand"} variant="light">
+                    <Badge color={activityActionColor(log.action)} variant="light">
                       {actionLabels[log.action] ?? log.action}
                     </Badge>
                   </Table.Td>

@@ -32,6 +32,8 @@ import {
   IconCalendarDue,
   IconHash,
 } from "@tabler/icons-react";
+import { SECONDARY_ACTION_COLOR } from "@/lib/ui";
+import { loanStatusColor, loanStatusLabel } from "@/lib/status";
 
 type LoanStatus = "REQUESTED" | "APPROVED" | "CLOSED" | "REJECTED";
 
@@ -46,20 +48,6 @@ type Loan = {
   purpose: string;
   status: LoanStatus;
   item: { id: number; name: string; category: string };
-};
-
-const statusColors: Record<LoanStatus, string> = {
-  REQUESTED: "yellow",
-  APPROVED: "steel",
-  CLOSED: "green",
-  REJECTED: "red",
-};
-
-const statusLabels: Record<LoanStatus, string> = {
-  REQUESTED: "Requested",
-  APPROVED: "Approved",
-  CLOSED: "Closed",
-  REJECTED: "Rejected",
 };
 
 const ITEMS_PER_PAGE = 8;
@@ -148,7 +136,7 @@ export function MyLoansTable() {
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
-            color="accent"
+            color={SECONDARY_ACTION_COLOR}
           >
             Reset
           </Button>
@@ -190,8 +178,8 @@ export function MyLoansTable() {
             <Card key={loan.id} withBorder radius="md" p="md">
               <Group justify="space-between" mb="xs">
                 <Text fw={700}>{loan.item.name}</Text>
-                <Badge color={statusColors[loan.status]} variant="light">
-                  {statusLabels[loan.status]}
+                <Badge color={loanStatusColor(loan.status)} variant="light">
+                  {loanStatusLabel(loan.status)}
                 </Badge>
               </Group>
               <Badge variant="light" mb="xs">{loan.item.category}</Badge>
@@ -253,8 +241,8 @@ export function MyLoansTable() {
                       <Badge variant="light">{loan.item.category}</Badge>
                     </Table.Td>
                     <Table.Td>
-                      <Badge color={statusColors[loan.status]} variant="light">
-                        {statusLabels[loan.status]}
+                      <Badge color={loanStatusColor(loan.status)} variant="light">
+                        {loanStatusLabel(loan.status)}
                       </Badge>
                     </Table.Td>
                     <Table.Td>{new Date(loan.requested_at).toLocaleDateString()}</Table.Td>

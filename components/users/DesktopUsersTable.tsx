@@ -19,6 +19,7 @@ import {
   IconKey,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
+import { roleColor, roleLabel } from "@/lib/ui";
 
 type Member = {
   id: number;
@@ -33,13 +34,6 @@ type Props = {
   onDelete: (id: number) => void;
   onResetPassword: (id: number, name: string) => Promise<string>;
   currentUserId?: number;
-};
-
-const roleLabels: Record<string, string> = {
-  MASTER_ADMIN: "Master Admin",
-  BOARD: "Board",
-  SENIOR_CORE: "Senior Core",
-  JUNIOR_CORE: "Junior Core",
 };
 
 export function DesktopUsersTable({
@@ -153,7 +147,7 @@ export function DesktopUsersTable({
                     <Text fw={600}>{member.name}</Text>
 
                     {isCurrentUser && (
-                      <Badge size="xs" color="green">
+                      <Badge size="xs" color="steel">
                         You
                       </Badge>
                     )}
@@ -169,32 +163,26 @@ export function DesktopUsersTable({
               <Table.Td>
 
                 <Badge
+                  size="md"
                   variant="light"
                   fw={600}
-                  color={
-                    member.role === "MASTER_ADMIN"
-                      ? "red"
-                      : member.role === "BOARD"
-                      ? "steel"
-                      : member.role === "SENIOR_CORE"
-                      ? "yellow.7"
-                      : "yellow.6"
-                  }
+                  color={roleColor(member.role)}
                 >
-                  {roleLabels[member.role]}
+                  {roleLabel(member.role)}
                 </Badge>
 
               </Table.Td>
 
               <Table.Td>
 
-                <Menu position="bottom-end">
+                <Group justify="center">
+                  <Menu position="bottom-end">
 
-                  <Menu.Target>
-                    <ActionIcon variant="subtle">
-                      <IconDotsVertical size={18} />
-                    </ActionIcon>
-                  </Menu.Target>
+                    <Menu.Target>
+                      <ActionIcon variant="subtle" color="ink" size="md" aria-label="User actions">
+                        <IconDotsVertical size={20} stroke={2.2} />
+                      </ActionIcon>
+                    </Menu.Target>
 
                   <Menu.Dropdown>
 
@@ -255,7 +243,8 @@ export function DesktopUsersTable({
 
                   </Menu.Dropdown>
 
-                </Menu>
+                  </Menu>
+                </Group>
 
               </Table.Td>
 

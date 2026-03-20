@@ -23,6 +23,7 @@ import {
   IconClockCheck,
 } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
+import { roleColor, roleLabel, PRIMARY_CTA_COLOR } from "@/lib/ui";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -78,20 +79,6 @@ export function Sidebar() {
   const visibleNavItems = navItems.filter((item) =>
     userRole ? item.roles.includes(userRole) : false
   );
-
-  const roleLabels: Record<string, string> = {
-    MASTER_ADMIN: "Master Admin",
-    BOARD: "Board",
-    SENIOR_CORE: "Senior Core",
-    JUNIOR_CORE: "Junior Core",
-  };
-
-  const roleColors: Record<string, string> = {
-    MASTER_ADMIN: "red",
-    BOARD: "accent",
-    SENIOR_CORE: "yellow.7",
-    JUNIOR_CORE: "yellow.6",
-  };
 
   return (
     <Stack justify="space-between" h="100%" pt="sm">
@@ -151,7 +138,7 @@ export function Sidebar() {
           }}
         >
           <Stack align="center" gap="xs">
-            <Avatar size={42} radius="xl" color="accent">
+            <Avatar size={42} radius="xl" color={PRIMARY_CTA_COLOR}>
               {session?.user?.name?.[0]?.toUpperCase() ?? "U"}
             </Avatar>
 
@@ -169,10 +156,10 @@ export function Sidebar() {
               <Badge
                 size="sm"
                 variant="light"
-                color={roleColors[session.user.role]}
+                color={roleColor(session.user.role)}
                 mt={4}
               >
-                {roleLabels[session.user.role]}
+                {roleLabel(session.user.role)}
               </Badge>
             )}
           </Stack>
