@@ -53,7 +53,8 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    let { name, category, quantity_total, location } = body;
+    const { quantity_total } = body;
+    let { name, category, location } = body;
 
     // Normalize inputs
     name = name?.trim();
