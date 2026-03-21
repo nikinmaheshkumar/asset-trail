@@ -17,6 +17,7 @@ export async function PATCH(
 
     const { session } = auth;
     const adminId = session.user.id;
+    const adminRole = session.user.role;
 
     const { id } = await context.params;
     const loanId = Number(id);
@@ -27,7 +28,14 @@ export async function PATCH(
 
     const existingLoan = await prisma.loan.findUnique({
       where: { id: loanId },
-      select: { id: true, item_id: true, status: true },
+      select: {
+        id: true,
+        item_id: true,
+        member_id: true,
+        quantity: true,
+        status: true,
+        item: { select: { quantity_available: true } },
+      },
     });
 
     if (!existingLoan) {
@@ -37,6 +45,20 @@ export async function PATCH(
     if (existingLoan.status !== "REQUESTED") {
       return NextResponse.json(
         { error: "Only REQUESTED loans can be approved" },
+        { status: 400 },
+      );
+    }
+
+    if (adminRole === "BOARD" && existingLoan.member_id === adminId) {
+      return NextResponse.json(
+        { error: "You cannot approve your own loan request" },
+        { status: 403 },
+      );
+    }
+
+    if (existingLoan.quantity > existingLoan.item.quantity_available) {
+      return NextResponse.json(
+        { error: `Insufficient stock (available: ${existingLoan.item.quantity_available})` },
         { status: 400 },
       );
     }
@@ -57,7 +79,7 @@ export async function PATCH(
 
       await tx.item.update({
         where: { id: existingLoan.item_id },
-        data: { quantity_available: { decrement: 1 } },
+        data: { quantity_available: { decrement: existingLoan.quantity } },
       });
 
       return loan;

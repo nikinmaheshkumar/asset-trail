@@ -17,6 +17,7 @@ export async function PATCH(
 
     const { session } = auth;
     const adminId = session.user.id;
+    const adminRole = session.user.role;
 
     const { id } = await context.params;
     const loanId = Number(id);
@@ -27,7 +28,7 @@ export async function PATCH(
 
     const existingLoan = await prisma.loan.findUnique({
       where: { id: loanId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, member_id: true },
     });
 
     if (!existingLoan) {
@@ -38,6 +39,13 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Only REQUESTED loans can be rejected" },
         { status: 400 },
+      );
+    }
+
+    if (adminRole === "BOARD" && existingLoan.member_id === adminId) {
+      return NextResponse.json(
+        { error: "You cannot reject your own loan request" },
+        { status: 403 },
       );
     }
 

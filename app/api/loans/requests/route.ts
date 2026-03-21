@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const auth = await requireRole(["MASTER_ADMIN", "BOARD"]);
 
@@ -18,6 +18,7 @@ export async function GET(req: Request) {
         id: true,
         item_id: true,
         member_id: true,
+        quantity: true,
         requested_at: true,
         purpose: true,
         status: true,
