@@ -22,18 +22,18 @@ import {
 import { Item } from "./InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useSession } from "next-auth/react";
+import { itemStatusColor, itemStatusLabel } from "@/lib/status";
+import { PRIMARY_CTA_COLOR, SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 type Props = {
   items: Item[];
-  borrowingId: number | null;
-  onBorrow: (id: number) => void;
+  onBorrow: (item: Item) => void;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
 };
 
 export function DesktopInventoryTable({
   items,
-  borrowingId,
   onBorrow,
   onEdit,
   onDelete,
@@ -42,14 +42,15 @@ export function DesktopInventoryTable({
   const role = session?.user?.role;
 
   return (
-    <ScrollArea>
-      <Table
-        verticalSpacing="lg"
-        horizontalSpacing="xl"
-        highlightOnHover
-        stickyHeader
-      >
-        <Table.Thead style={{ background: "#f8f9fa" }}>
+    <div className="table-shell">
+      <ScrollArea>
+        <Table
+          verticalSpacing="lg"
+          horizontalSpacing="xl"
+          highlightOnHover
+          stickyHeader
+        >
+        <Table.Thead style={{ background: "var(--app-table-head)" }}>
           <Table.Tr>
             <Table.Th>
               <Group gap={6}>
@@ -138,14 +139,14 @@ export function DesktopInventoryTable({
                         lowStock
                           ? "red"
                           : item.quantity_available === 0
-                          ? "gray"
+                          ? "brand"
                           : undefined
                       }
                     >
                       {item.quantity_available}
                     </Text>
 
-                    <Text c="dimmed">/ {item.quantity_total}</Text>
+                    <Text>/ {item.quantity_total}</Text>
 
                     {lowStock && (
                       <Badge color="red" variant="light" radius="xl">
@@ -157,18 +158,8 @@ export function DesktopInventoryTable({
 
                 {/* Status */}
                 <Table.Td>
-                  <Badge
-                    color={
-                      item.status === "WORKING"
-                        ? "green"
-                        : item.status === "NEEDS_TESTING"
-                        ? "yellow"
-                        : item.status === "FAULTY"
-                        ? "red"
-                        : "gray"
-                    }
-                  >
-                    {item.status}
+                  <Badge color={itemStatusColor(item.status)}>
+                    {itemStatusLabel(item.status)}
                   </Badge>
                 </Table.Td>
 
@@ -186,9 +177,9 @@ export function DesktopInventoryTable({
                   >
                     <Button
                       size="sm"
-                      loading={borrowingId === item.id}
                       disabled={unavailable}
-                      onClick={() => onBorrow(item.id)}
+                      onClick={() => onBorrow(item)}
+                      color={unavailable ? undefined : PRIMARY_CTA_COLOR}
                     >
                       {item.quantity_available === 0
                         ? "Out of Stock"
@@ -205,6 +196,7 @@ export function DesktopInventoryTable({
                         size="sm"
                         fw={700}
                         variant="light"
+                        color={SECONDARY_ACTION_COLOR}
                         px="md"
                         leftSection={<IconEdit size={16} />}
                         onClick={() => onEdit(item)}
@@ -240,7 +232,8 @@ export function DesktopInventoryTable({
             );
           })}
         </Table.Tbody>
-      </Table>
-    </ScrollArea>
+        </Table>
+      </ScrollArea>
+    </div>
   );
 }

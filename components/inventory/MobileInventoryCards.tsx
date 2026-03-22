@@ -15,18 +15,18 @@ import { Item } from "./InventoryTable";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { useSession } from "next-auth/react";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { itemStatusColor, itemStatusLabel } from "@/lib/status";
+import { PRIMARY_CTA_COLOR, SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 type Props = {
   items: Item[];
-  borrowingId: number | null;
-  onBorrow: (id: number) => void;
+  onBorrow: (item: Item) => void;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
 };
 
 export function MobileInventoryCards({
   items,
-  borrowingId,
   onBorrow,
   onEdit,
   onDelete,
@@ -52,7 +52,7 @@ export function MobileInventoryCards({
             {/* Header */}
             <Group justify="space-between">
               <Box>
-                <Text size="sm" c="dimmed">
+                <Text size="sm">
                   #{index + 1}
                 </Text>
                 <Text fw={600}>{item.name}</Text>
@@ -60,24 +60,16 @@ export function MobileInventoryCards({
 
               <Badge
                 variant="light"
-                color={
-                  item.status === "WORKING"
-                    ? "green"
-                    : item.status === "NEEDS_TESTING"
-                    ? "yellow"
-                    : item.status === "FAULTY"
-                    ? "red"
-                    : "gray"
-                }
+                color={itemStatusColor(item.status)}
               >
-                {item.status}
+                {itemStatusLabel(item.status)}
               </Badge>
             </Group>
 
             <Divider my="sm" />
 
             {/* Category */}
-            <Text size="sm" c="dimmed">
+            <Text size="sm">
               Category
             </Text>
 
@@ -86,7 +78,7 @@ export function MobileInventoryCards({
             </Badge>
 
             {/* Availability */}
-            <Text size="sm" c="dimmed" mt="xs">
+            <Text size="sm" mt="xs">
               Availability
             </Text>
 
@@ -117,9 +109,9 @@ export function MobileInventoryCards({
                 mt="lg"
                 fullWidth
                 size="sm"
-                loading={borrowingId === item.id}
                 disabled={unavailable}
-                onClick={() => onBorrow(item.id)}
+                onClick={() => onBorrow(item)}
+                color={unavailable ? undefined : PRIMARY_CTA_COLOR}
               >
                 {item.quantity_available === 0
                   ? "Out of Stock"
@@ -134,6 +126,7 @@ export function MobileInventoryCards({
                   size="sm"
                   fw={700}
                   variant="light"
+                  color={SECONDARY_ACTION_COLOR}
                   leftSection={<IconEdit size={16} />}
                   onClick={() => onEdit(item)}
                 >
