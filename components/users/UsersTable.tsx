@@ -19,6 +19,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconSearch, IconRefresh } from "@tabler/icons-react";
 import { DesktopUsersTable } from "./DesktopUsersTable";
 import { MobileUsersCards } from "./MobileUserCards";
+import { SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 export type Member = {
   id: number;
@@ -86,7 +87,16 @@ export function UsersTable({
     <Stack gap="xl">
 
       {/* FILTER PANEL */}
-      <Paper withBorder radius="md" p="md" shadow="xs">
+      <Paper
+        withBorder
+        radius="md"
+        p="md"
+        shadow="xs"
+        style={{
+          background: "linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-accent-2-soft) 35%, var(--app-surface)) 100%)",
+          borderColor: "color-mix(in srgb, var(--app-accent-2) 16%, var(--app-border))",
+        }}
+      >
         <Group justify="space-between" mb="md">
           <Title order={5} fw={800}>
             Filters
@@ -98,6 +108,7 @@ export function UsersTable({
             leftSection={<IconRefresh size={16} />}
             onClick={handleReset}
             disabled={!filtersActive}
+            color={SECONDARY_ACTION_COLOR}
           >
             Reset
           </Button>
@@ -142,9 +153,7 @@ export function UsersTable({
       {/* TABLE OR MOBILE CARDS */}
       {paginatedMembers.length === 0 ? (
         <Center py="lg">
-          <Text c="dimmed">
-            No members match your filters
-          </Text>
+          <Text>No members match your filters</Text>
         </Center>
       ) : isMobile ? (
         <MobileUsersCards
