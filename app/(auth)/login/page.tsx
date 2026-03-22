@@ -15,7 +15,6 @@ import {
   Button,
   Alert,
   Loader,
-  Avatar,
   Box,
   Container,
   Divider,
@@ -60,7 +59,7 @@ export default function LoginPage() {
 
   if (status === "loading") {
     return (
-      <Center h="100vh" bg="#f3f5ed">
+      <Center h="100vh" bg="var(--app-bg)">
         <Loader color="dark" />
       </Center>
     );
@@ -84,8 +83,8 @@ export default function LoginPage() {
           radius="lg"
           style={{
             borderRadius: "20px",
-            background: "#ffffff",
-            border: "1px solid #ececec",
+            background: "linear-gradient(180deg, var(--app-chrome) 0%, color-mix(in srgb, var(--app-chrome) 82%, black) 100%)",
+            border: "1px solid color-mix(in srgb, var(--app-chrome) 72%, white)",
           }}
         >
           <Stack gap="lg">
@@ -100,20 +99,24 @@ export default function LoginPage() {
               >
                 <img
                   src="/logo.png"
-                  alt="AssetTrail Logo"
+                  alt="IEEE Robotics & Automation Society"
+                  width={140}
+                  height={56}
+                  loading="eager"
+                  decoding="async"
                   style={{
                     width: 140,
-                    height: "auto",
+                    height: 56,
                     objectFit: "contain",
                   }}
                 />
               </Box>
 
-              <Title order={1} fw={700}>
+              <Title order={1} fw={650} c="white">
                 Asset Trail
               </Title>
 
-              <Text size="md" c="dimmed">
+              <Text size="md" c="white" fw={450}>
                 Asset Management System
               </Text>
             </Stack>
@@ -131,6 +134,10 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.currentTarget.value)}
                   required
+                  styles={{
+                    label: { color: "white", fontWeight: 450 },
+                    input: { fontWeight: 450 },
+                  }}
                 />
 
                 <PasswordInput
@@ -141,10 +148,24 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.currentTarget.value)}
                   required
+                  styles={{
+                    label: { color: "white", fontWeight: 450 },
+                    input: { fontWeight: 450 },
+                  }}
                 />
 
                 {error && (
-                  <Alert color="red" variant="light">
+                  <Alert
+                    color="orange"
+                    variant="light"
+                    styles={{
+                      root: {
+                        background: "color-mix(in srgb, var(--app-warning) 22%, transparent)",
+                        borderColor: "color-mix(in srgb, var(--app-warning) 60%, white)",
+                      },
+                      message: { color: "white", fontWeight: 550 },
+                    }}
+                  >
                     {error}
                   </Alert>
                 )}
@@ -155,10 +176,8 @@ export default function LoginPage() {
                   size="lg"
                   loading={loading}
                   radius="md"
-                  style={{
-                    backgroundColor: "#181818",
-                    height: "48px",
-                  }}
+                  color="brand"
+                  style={{ height: "48px" }}
                 >
                   Login
                 </Button>

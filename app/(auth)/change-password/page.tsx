@@ -13,7 +13,6 @@ import {
   Button,
   Alert,
   Container,
-  Avatar,
   Divider,
 } from "@mantine/core";
 
@@ -68,8 +67,8 @@ export default function ChangePasswordPage() {
           radius="lg"
           style={{
             borderRadius: "20px",
-            background: "#ffffff",
-            border: "1px solid #ececec",
+            background: "linear-gradient(180deg, var(--app-chrome) 0%, color-mix(in srgb, var(--app-chrome) 82%, black) 100%)",
+            border: "1px solid color-mix(in srgb, var(--app-chrome) 72%, white)",
           }}
         >
           <Stack gap="lg">
@@ -84,18 +83,22 @@ export default function ChangePasswordPage() {
               >
                 <img
                   src="/logo.png"
-                  alt="AssetTrail Logo"
+                  alt="IEEE Robotics & Automation Society"
+                  width={140}
+                  height={56}
+                  loading="eager"
+                  decoding="async"
                   style={{
                     width: 140,
-                    height: "auto",
+                    height: 56,
                     objectFit: "contain",
                   }}
                 />
               </Box>
 
-              <Title order={2}>Change Password</Title>
+              <Title order={2} c="white" fw={750}>Change Password</Title>
 
-              <Text size="sm" c="dimmed">
+              <Text size="sm" c="white" fw={600}>
                 Update your password to continue using AssetTrail
               </Text>
             </Stack>
@@ -113,6 +116,7 @@ export default function ChangePasswordPage() {
                   value={password}
                   onChange={(e) => setPassword(e.currentTarget.value)}
                   required
+                  styles={{ label: { color: "white", fontWeight: 600 } }}
                 />
 
                 <PasswordInput
@@ -123,6 +127,7 @@ export default function ChangePasswordPage() {
                   value={confirm}
                   onChange={(e) => setConfirm(e.currentTarget.value)}
                   required
+                  styles={{ label: { color: "white", fontWeight: 600 } }}
                 />
 
                 {error && (
@@ -137,10 +142,8 @@ export default function ChangePasswordPage() {
                   size="md"
                   radius="md"
                   loading={loading}
-                  style={{
-                    backgroundColor: "#181818",
-                    height: "44px",
-                  }}
+                  color="brand"
+                  style={{ height: "44px" }}
                 >
                   Update Password
                 </Button>
