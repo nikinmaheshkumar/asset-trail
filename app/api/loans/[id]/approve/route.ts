@@ -34,6 +34,7 @@ export async function PATCH(
         member_id: true,
         quantity: true,
         status: true,
+        due_date: true,
         item: { select: { quantity_available: true } },
       },
     });
@@ -56,34 +57,72 @@ export async function PATCH(
       );
     }
 
-    if (existingLoan.quantity > existingLoan.item.quantity_available) {
+    if (!existingLoan.due_date) {
       return NextResponse.json(
-        { error: `Insufficient stock (available: ${existingLoan.item.quantity_available})` },
+        { error: "Loan request is missing a due date" },
         { status: 400 },
       );
     }
 
     const approvedAt = new Date();
-    const dueDate = new Date(approvedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const updatedLoan = await prisma.$transaction(async (tx) => {
-      const loan = await tx.loan.update({
-        where: { id: loanId },
+      // Ensure loan is still REQUESTED (prevents double approval)
+      const loanUpdate = await tx.loan.updateMany({
+        where: { id: loanId, status: "REQUESTED" },
         data: {
           status: "APPROVED",
           approved_by: adminId,
           approved_at: approvedAt,
-          due_date: dueDate,
+          // IMPORTANT: do not override due_date; it is set by requester on creation.
         },
       });
 
-      await tx.item.update({
-        where: { id: existingLoan.item_id },
+      if (loanUpdate.count !== 1) {
+        throw new Error("LOAN_NOT_REQUESTED");
+      }
+
+      // Atomic stock decrement (prevents negative inventory)
+      const itemUpdate = await tx.item.updateMany({
+        where: {
+          id: existingLoan.item_id,
+          quantity_available: { gte: existingLoan.quantity },
+        },
         data: { quantity_available: { decrement: existingLoan.quantity } },
       });
 
+      if (itemUpdate.count !== 1) {
+        throw new Error("INSUFFICIENT_STOCK");
+      }
+
+      const loan = await tx.loan.findUnique({
+        where: { id: loanId },
+      });
+
       return loan;
+    }).catch((err) => {
+      if (err instanceof Error && err.message === "LOAN_NOT_REQUESTED") {
+        return null;
+      }
+      if (err instanceof Error && err.message === "INSUFFICIENT_STOCK") {
+        return "INSUFFICIENT_STOCK" as const;
+      }
+      throw err;
     });
+
+    if (updatedLoan === null) {
+      return NextResponse.json(
+        { error: "Only REQUESTED loans can be approved" },
+        { status: 400 },
+      );
+    }
+
+    if (updatedLoan === "INSUFFICIENT_STOCK") {
+      return NextResponse.json(
+        { error: "Insufficient stock to approve this loan" },
+        { status: 400 },
+      );
+    }
 
     await prisma.activityLog.create({
       data: {

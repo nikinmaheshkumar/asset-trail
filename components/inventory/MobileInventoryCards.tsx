@@ -20,6 +20,7 @@ import { PRIMARY_CTA_COLOR, SECONDARY_ACTION_COLOR } from "@/lib/ui";
 
 type Props = {
   items: Item[];
+  offset?: number;
   onBorrow: (item: Item) => void;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
@@ -27,6 +28,7 @@ type Props = {
 
 export function MobileInventoryCards({
   items,
+  offset = 0,
   onBorrow,
   onEdit,
   onDelete,
@@ -53,7 +55,7 @@ export function MobileInventoryCards({
             <Group justify="space-between">
               <Box>
                 <Text size="sm">
-                  #{index + 1}
+                  #{offset + index + 1}
                 </Text>
                 <Text fw={600}>{item.name}</Text>
               </Box>

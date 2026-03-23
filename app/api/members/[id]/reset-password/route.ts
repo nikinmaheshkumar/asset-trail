@@ -40,6 +40,13 @@ export async function PATCH(
       );
     }
 
+    if (String(password).length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 },
+      );
+    }
+
     const member = await prisma.member.findUnique({
       where: { id: memberId },
       select: { id: true },
@@ -59,6 +66,14 @@ export async function PATCH(
       data: {
         password_hash: hashedPassword,
         mustChangePwd: true,
+      },
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        action: "password_reset",
+        actor_id: auth.session.user.id,
+        target_id: memberId,
       },
     });
 

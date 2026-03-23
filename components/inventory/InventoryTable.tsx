@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Loader,
   Center,
@@ -53,86 +53,72 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
 
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 8;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
 
-      const res = await fetch("/api/items");
-      const data = await res.json();
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("limit", String(ITEMS_PER_PAGE));
+      if (search.trim()) params.set("search", search.trim());
+      if (categoryFilter) params.set("category", categoryFilter);
+      if (statusFilter) params.set("status", statusFilter);
 
-      // Alphabetical sorting
-      const sorted = data.sort((a: Item, b: Item) =>
-        a.name.localeCompare(b.name)
-      );
+      const res = await fetch(`/api/items?${params.toString()}`);
+      const json = await res.json();
 
-      setItems(sorted);
+      const data = Array.isArray(json) ? json : (json.data ?? []);
+      const meta = json.meta;
+
+      setItems(data);
+      setTotalPages(meta?.totalPages ?? 1);
+      setTotalCount(meta?.total ?? data.length);
     } catch {
       // silent fail — table will show empty
+      setItems([]);
+      setTotalPages(1);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
-  }
+  }, [page, search, categoryFilter, statusFilter]);
 
   useEffect(() => {
     fetchItems();
-  }, [refreshKey]);
+  }, [fetchItems, refreshKey, page, search, categoryFilter, statusFilter]);
 
   function handleBorrow(item: Item) {
     setBorrowModalItem(item);
   }
 
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesSearch = item.name
-        .toLowerCase()
-        .includes(search.toLowerCase());
-
-      const matchesCategory = categoryFilter
-        ? item.category === categoryFilter
-        : true;
-
-      const matchesStatus = statusFilter
-        ? item.status === statusFilter
-        : true;
-
-      const matchesLowStock = lowStockOnly
-        ? item.quantity_available > 0 &&
-          item.quantity_available <= item.quantity_total * 0.2
-        : true;
-
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesStatus &&
-        matchesLowStock
-      );
-    });
-  }, [items, search, categoryFilter, statusFilter, lowStockOnly]);
+    if (!lowStockOnly) return items;
+    return items.filter((item) =>
+      item.quantity_available > 0 &&
+      item.quantity_available <= item.quantity_total * 0.2
+    );
+  }, [items, lowStockOnly]);
 
   useEffect(() => {
     setPage(1);
   }, [search, categoryFilter, statusFilter, lowStockOnly]);
 
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = filteredItems;
 
-  const paginatedItems = useMemo(() => {
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    return filteredItems.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredItems, page]);
-
-  const startItem =
-    filteredItems.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1;
-
-  const endItem = Math.min(page * ITEMS_PER_PAGE, filteredItems.length);
+  const startItem = totalCount === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(page * ITEMS_PER_PAGE, totalCount);
 
   const handleReset = () => {
     setSearch("");
     setCategoryFilter(null);
     setStatusFilter(null);
     setLowStockOnly(false);
+    setPage(1);
   };
 
   const filtersActive =
@@ -243,6 +229,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
       ) : isMobile ? (
         <MobileInventoryCards
           items={paginatedItems}
+          offset={(page - 1) * ITEMS_PER_PAGE}
           onBorrow={handleBorrow}
           onEdit={onEdit}
           onDelete={onDelete}
@@ -250,6 +237,7 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
       ) : (
         <DesktopInventoryTable
           items={paginatedItems}
+          offset={(page - 1) * ITEMS_PER_PAGE}
           onBorrow={handleBorrow}
           onEdit={onEdit}
           onDelete={onDelete}
@@ -273,9 +261,9 @@ export function InventoryTable({ refreshKey, onEdit, onDelete }: Props) {
           <Divider />
 
           <Group justify="space-between" align="center">
-            <Text size="sm" fw={500}>
-              Showing {startItem}-{endItem} of {filteredItems.length}
-            </Text>
+              <Text size="sm" fw={500}>
+                Showing {startItem}-{endItem} of {totalCount}
+              </Text>
 
             <Group gap="xs" align="center">
               <Button

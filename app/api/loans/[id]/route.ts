@@ -47,6 +47,12 @@ export async function GET(
       return NextResponse.json({ error: "Loan not found" }, { status: 404 });
     }
 
+    const role = auth.session.user.role as string;
+    const isAdmin = role === "MASTER_ADMIN" || role === "BOARD";
+    if (!isAdmin && loan.member_id !== auth.session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     return NextResponse.json(loan);
 
   } catch (error) {

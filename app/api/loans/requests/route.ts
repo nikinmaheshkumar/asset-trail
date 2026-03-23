@@ -20,6 +20,7 @@ export async function GET() {
         member_id: true,
         quantity: true,
         requested_at: true,
+        due_date: true,
         purpose: true,
         status: true,
         item: { select: { id: true, name: true, category: true, quantity_available: true } },

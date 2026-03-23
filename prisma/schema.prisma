@@ -27,6 +27,7 @@ enum LoanStatus {
   APPROVED
   CLOSED
   REJECTED
+  CANCELLED
 }
 
 model Member {
@@ -41,6 +42,7 @@ model Member {
 
   loans           Loan[]   @relation("MemberLoans")
   approved_loans  Loan[]   @relation("LoanApprover")
+  rejected_loans  Loan[]   @relation("LoanRejector")
 }
 
 model Item {
@@ -66,15 +68,20 @@ model Loan {
   approved_at  DateTime?
   closed_at    DateTime?
   due_date     DateTime?
+  cancelled_at DateTime?
   purpose      String
   status       LoanStatus @default(REQUESTED)
   approved_by  Int?
+  rejected_by  Int?
+  rejected_at  DateTime?
+  rejection_note String?
   created_at   DateTime   @default(now())
   updated_at   DateTime   @updatedAt
 
-  item     Item    @relation(fields: [item_id], references: [id])
+  item     Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
   member   Member  @relation("MemberLoans", fields: [member_id], references: [id])
-  approver Member? @relation("LoanApprover", fields: [approved_by], references: [id])
+  approver Member? @relation("LoanApprover", fields: [approved_by], references: [id], onDelete: SetNull)
+  rejector Member? @relation("LoanRejector", fields: [rejected_by], references: [id], onDelete: SetNull)
 
   @@index([item_id])
   @@index([member_id])

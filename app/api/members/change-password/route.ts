@@ -23,6 +23,13 @@ export async function PATCH(req: Request) {
       );
     }
 
+    if (String(newPassword).length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 },
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     const email = auth.session.user.email;
@@ -39,6 +46,14 @@ export async function PATCH(req: Request) {
       data: {
         password_hash: hashedPassword,
         mustChangePwd: false,
+      },
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        action: "password_changed",
+        actor_id: auth.session.user.id,
+        target_id: auth.session.user.id,
       },
     });
 
