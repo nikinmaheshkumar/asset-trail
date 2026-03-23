@@ -72,9 +72,9 @@ model Loan {
   created_at   DateTime   @default(now())
   updated_at   DateTime   @updatedAt
 
-  item     Item    @relation(fields: [item_id], references: [id])
+  item     Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
   member   Member  @relation("MemberLoans", fields: [member_id], references: [id])
-  approver Member? @relation("LoanApprover", fields: [approved_by], references: [id])
+  approver Member? @relation("LoanApprover", fields: [approved_by], references: [id], onDelete: SetNull)
 
   @@index([item_id])
   @@index([member_id])

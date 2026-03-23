@@ -44,6 +44,19 @@ export function RequestLoanModal({ opened, item, onClose, onRequested }: Props) 
       return;
     }
 
+    if (!dueDate) {
+      notifications.show({ color: "red", title: "Validation", message: "Due date is required" });
+      return;
+    }
+
+    const todayObj = new Date();
+    todayObj.setHours(0, 0, 0, 0);
+    const dueObj = new Date(`${dueDate}T00:00:00`);
+    if (Number.isNaN(dueObj.getTime()) || dueObj < todayObj) {
+      notifications.show({ color: "red", title: "Validation", message: "Due date must be today or a future date" });
+      return;
+    }
+
     const available = item.quantity_available ?? 0;
     const qty = typeof quantity === "number" ? quantity : Number(quantity);
     if (!Number.isFinite(qty) || qty <= 0) {
@@ -143,11 +156,12 @@ export function RequestLoanModal({ opened, item, onClose, onRequested }: Props) 
 
         <TextInput
           label="Preferred Due Date"
-          description="Optional — admin will set the final due date on approval"
+          description="Required — choose when you will return the item"
           type="date"
           min={today}
           value={dueDate}
           onChange={(e) => setDueDate(e.currentTarget.value)}
+          required
         />
 
         <Textarea

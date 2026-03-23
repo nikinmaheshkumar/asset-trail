@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   TextInput,
@@ -21,13 +21,25 @@ type Props = {
 };
 
 export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
-  const DEFAULT_PASSWORD = "IEEERASvit@26";
+  const generatePassword = () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(14));
+    return Array.from(bytes)
+      .map((b) => (b % 36).toString(36))
+      .join("")
+      .slice(0, 14);
+  };
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(DEFAULT_PASSWORD);
+  const [password, setPassword] = useState(generatePassword());
   const [role, setRole] = useState<string | null>("JUNIOR_CORE");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (opened) {
+      setPassword(generatePassword());
+    }
+  }, [opened]);
 
   async function handleSubmit() {
     if (!name || !email || !password) {
@@ -71,7 +83,7 @@ export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
       // Reset form
       setName("");
       setEmail("");
-      setPassword(DEFAULT_PASSWORD);
+      setPassword(generatePassword());
       setRole("JUNIOR_CORE");
     } catch {
       notifications.show({
@@ -123,8 +135,12 @@ export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
           }
         />
 
+        <Button variant="light" onClick={() => setPassword(generatePassword())}>
+          Regenerate Password
+        </Button>
+
         <Text size="xs">
-          Default password. User must change it on first login.
+          Temporary password. User must change it on first login.
         </Text>
 
         <Select

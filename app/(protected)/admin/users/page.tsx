@@ -29,7 +29,6 @@ export default function UsersPage() {
   const userRole = session?.user?.role;
   const currentUserId = session?.user?.id;
 
-  const DEFAULT_PASSWORD = "Temp@123";
 
   useEffect(() => {
     if (status === "loading") return;
@@ -75,17 +74,21 @@ export default function UsersPage() {
       throw new Error("You cannot reset your own password");
     }
 
+    const tempPassword = crypto.getRandomValues(new Uint8Array(12))
+      .reduce((acc, n) => acc + (n % 36).toString(36), "")
+      .slice(0, 12);
+
     const res = await fetch(`/api/members/${id}/reset-password`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: DEFAULT_PASSWORD }),
+      body: JSON.stringify({ password: tempPassword }),
     });
 
     if (!res.ok) {
       throw new Error("Reset failed");
     }
 
-    return DEFAULT_PASSWORD;
+    return tempPassword;
   }
 
   useEffect(() => {

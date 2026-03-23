@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { requireRole } from "@/lib/auth";
+import { Role } from "@prisma/client";
+
+const ROLES: Role[] = ["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"];
 
 export async function GET() {
   try {
@@ -60,8 +63,30 @@ export async function POST(req: Request) {
       );
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!normalizedEmail.includes("@")) {
+      return NextResponse.json(
+        { error: "Invalid email" },
+        { status: 400 },
+      );
+    }
+
+    if (String(password).length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 },
+      );
+    }
+
+    if (role != null && (typeof role !== "string" || !ROLES.includes(role as Role))) {
+      return NextResponse.json(
+        { error: "Invalid role" },
+        { status: 400 },
+      );
+    }
+
     const existingUser = await prisma.member.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -75,8 +100,8 @@ export async function POST(req: Request) {
 
     const member = await prisma.member.create({
       data: {
-        name,
-        email,
+        name: String(name).trim(),
+        email: normalizedEmail,
         password_hash: hashedPassword,
         role: role ?? "JUNIOR_CORE",
         mustChangePwd: true,

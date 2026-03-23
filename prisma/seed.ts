@@ -8,7 +8,7 @@ async function main() {
   console.log("🌱 Seeding database...");
 
   // ── Members ─────────────────────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash("Password@123", 10);
+  const passwordHash = await bcrypt.hash(process.env.SEED_PASSWORD ?? "Password@123", 10);
 
   const members = await Promise.all([
     prisma.member.upsert({
@@ -288,7 +288,7 @@ async function main() {
 
   console.log("\n🎉 Seed complete!");
   // NOTE: These are development-only test credentials — do not use in production.
-  console.log("\n📋 Test accounts (all use password: Password@123):");
+  console.log(`\n📋 Test accounts (all use password: ${process.env.SEED_PASSWORD ?? "Password@123"}):`);
   console.log("   master@assettrail.dev   — MASTER_ADMIN");
   console.log("   board1@assettrail.dev   — BOARD");
   console.log("   senior1@assettrail.dev  — SENIOR_CORE");

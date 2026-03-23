@@ -3,6 +3,9 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { requireRole, requireAuth } from "@/lib/auth";
+import { ItemStatus } from "@prisma/client";
+
+const ITEM_STATUSES: ItemStatus[] = ["WORKING", "NEEDS_TESTING", "FAULTY", "SCRAP"];
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> },
@@ -69,11 +72,31 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { name, category, quantity_total, location, status } = body;
+    let { name, category, location } = body;
+    const status = body.status as unknown;
+    const { quantity_total } = body;
+
+    name = name?.trim();
+    category = category?.trim();
+    location = location?.trim();
+
+    const parsedStatus =
+      status === undefined
+        ? undefined
+        : typeof status === "string" && ITEM_STATUSES.includes(status as ItemStatus)
+          ? (status as ItemStatus)
+          : null;
+
+    if (parsedStatus === null) {
+        return NextResponse.json(
+          { error: "Invalid status" },
+          { status: 400 },
+        );
+    }
 
     const existingItem = await prisma.item.findUnique({
       where: { id: itemId },
-      select: { quantity_available: true },
+      select: { quantity_available: true, quantity_total: true },
     });
 
     if (!existingItem) {
@@ -83,7 +106,15 @@ export async function PATCH(
     if (quantity_total !== undefined) {
       const newTotal = Number(quantity_total);
 
-      if (isNaN(newTotal) || newTotal < existingItem.quantity_available) {
+      // Ensure available doesn't go negative if totals change
+      const borrowed = existingItem.quantity_total - existingItem.quantity_available;
+      const newAvailable = newTotal - borrowed;
+
+      if (
+        isNaN(newTotal) ||
+        newTotal < 0 ||
+        newAvailable < 0
+      ) {
         return NextResponse.json(
           { error: "Invalid quantity_total" },
           { status: 400 }
@@ -98,9 +129,10 @@ export async function PATCH(
         ...(category && { category }),
         ...(quantity_total !== undefined && {
           quantity_total: Number(quantity_total),
+          quantity_available: Number(quantity_total) - (existingItem.quantity_total - existingItem.quantity_available),
         }),
         ...(location && { location }),
-        ...(status && { status }),
+        ...(parsedStatus && { status: parsedStatus }),
       },
       select: {
         id: true,
@@ -136,7 +168,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRole(["MASTER_ADMIN", "BOARD"]);
+    const auth = await requireRole(["MASTER_ADMIN"]);
 
     if ("error" in auth) {
       return NextResponse.json(
@@ -152,8 +184,25 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
     }
 
-    await prisma.item.delete({
-      where: { id: itemId },
+    const loansCount = await prisma.loan.count({
+      where: { item_id: itemId },
+    });
+
+    if (loansCount > 0) {
+      return NextResponse.json(
+        { error: "Cannot delete item with existing loan history" },
+        { status: 400 },
+      );
+    }
+
+    await prisma.item.delete({ where: { id: itemId } });
+
+    await prisma.activityLog.create({
+      data: {
+        action: "item_deleted",
+        actor_id: auth.session.user.id,
+        target_id: itemId,
+      },
     });
 
     return NextResponse.json({ message: "Item deleted successfully" });

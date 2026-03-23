@@ -3,6 +3,9 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
+import { Role } from "@prisma/client";
+
+const ROLES: Role[] = ["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"];
 
 export async function GET(
   req: Request,
@@ -74,7 +77,47 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { name, email, role } = body;
+    let { name, email } = body;
+    const role = body.role as unknown;
+
+    name = name?.trim();
+    email = email?.trim()?.toLowerCase();
+
+    if (name != null && typeof name !== "string") {
+      return NextResponse.json({ error: "Invalid name" }, { status: 400 });
+    }
+
+    const parsedRole =
+      role === undefined
+        ? undefined
+        : typeof role === "string" && ROLES.includes(role as Role)
+          ? (role as Role)
+          : null;
+
+    if (parsedRole === null) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    if (email != null) {
+      if (typeof email !== "string" || !email.includes("@")) {
+        return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+      }
+
+      const emailOwner = await prisma.member.findFirst({
+        where: {
+          email,
+          id: { not: memberId },
+        },
+        select: { id: true },
+      });
+
+      if (emailOwner) {
+        return NextResponse.json(
+          { error: "User with this email already exists" },
+          { status: 409 },
+        );
+      }
+    }
 
     const existingMember = await prisma.member.findUnique({
       where: { id: memberId },
@@ -86,11 +129,7 @@ export async function PATCH(
     }
 
     // prevent removing last MASTER_ADMIN
-    if (
-      existingMember.role === "MASTER_ADMIN" &&
-      role &&
-      role !== "MASTER_ADMIN"
-    ) {
+    if (existingMember.role === "MASTER_ADMIN" && parsedRole && parsedRole !== "MASTER_ADMIN") {
       const masterCount = await prisma.member.count({
         where: { role: "MASTER_ADMIN" },
       });
@@ -108,7 +147,7 @@ export async function PATCH(
       data: {
         ...(name && { name }),
         ...(email && { email }),
-        ...(role && { role }),
+        ...(parsedRole && { role: parsedRole }),
       },
       select: {
         id: true,
@@ -118,7 +157,15 @@ export async function PATCH(
       },
     });
 
-    if (role && role !== existingMember.role) {
+    await prisma.activityLog.create({
+      data: {
+        action: "member_updated",
+        actor_id: auth.session.user.id,
+        target_id: memberId,
+      },
+    });
+
+    if (parsedRole && parsedRole !== existingMember.role) {
       await prisma.activityLog.create({
         data: {
           action: "role_changed",
@@ -161,6 +208,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid member ID" }, { status: 400 });
     }
 
+    if (memberId === auth.session.user.id) {
+      return NextResponse.json(
+        { error: "Cannot delete yourself" },
+        { status: 400 },
+      );
+    }
+
     const member = await prisma.member.findUnique({
       where: { id: memberId },
       select: { role: true },
@@ -183,8 +237,30 @@ export async function DELETE(
       }
     }
 
+    const activeLoansCount = await prisma.loan.count({
+      where: {
+        member_id: memberId,
+        status: { in: ["REQUESTED", "APPROVED"] },
+      },
+    });
+
+    if (activeLoansCount > 0) {
+      return NextResponse.json(
+        { error: "Cannot delete member with active loans" },
+        { status: 400 },
+      );
+    }
+
     await prisma.member.delete({
       where: { id: memberId },
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        action: "member_deleted",
+        actor_id: auth.session.user.id,
+        target_id: memberId,
+      },
     });
 
     return NextResponse.json({ message: "Member deleted successfully" });

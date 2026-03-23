@@ -52,6 +52,7 @@ type LoanRequest = {
   member_id: number;
   quantity: number;
   requested_at: string;
+  due_date?: string | null;
   purpose: string;
   status: string;
   item: { id: number; name: string; category: string; quantity_available: number };
@@ -243,6 +244,9 @@ export function AdminRequestsTable() {
               <Text size="xs">
                 Requested: {new Date(req.requested_at).toLocaleDateString()}
               </Text>
+              <Text size="xs">
+                Due: {req.due_date ? new Date(req.due_date).toLocaleDateString() : "—"}
+              </Text>
               {req.purpose && (
                 <Text size="xs">Purpose: {req.purpose}</Text>
               )}
@@ -281,6 +285,7 @@ export function AdminRequestsTable() {
                 <Table.Th><Group gap={6}><IconUser size={16} /><Text fw={800}>Requested By</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconShield size={16} /><Text fw={800}>Role</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconCalendar size={16} /><Text fw={800}>Requested At</Text></Group></Table.Th>
+                <Table.Th><Group gap={6}><IconCalendar size={16} /><Text fw={800}>Due Date</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconNotes size={16} /><Text fw={800}>Purpose</Text></Group></Table.Th>
                 <Table.Th><Group gap={6}><IconSettings size={16} /><Text fw={800}>Actions</Text></Group></Table.Th>
               </Table.Tr>
@@ -304,17 +309,20 @@ export function AdminRequestsTable() {
                       <Text size="xs">{req.member.email}</Text>
                     </Stack>
                   </Table.Td>
-                  <Table.Td>
-                    <Badge color={roleColor(req.member.role)} variant="light" fw={600}>
-                      {roleLabel(req.member.role)}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>{new Date(req.requested_at).toLocaleDateString()}</Table.Td>
-                  <Table.Td>
-                    <Text size="sm">{req.purpose || "—"}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
+                   <Table.Td>
+                     <Badge color={roleColor(req.member.role)} variant="light" fw={600}>
+                       {roleLabel(req.member.role)}
+                     </Badge>
+                   </Table.Td>
+                   <Table.Td>{new Date(req.requested_at).toLocaleDateString()}</Table.Td>
+                   <Table.Td>
+                     {req.due_date ? new Date(req.due_date).toLocaleDateString() : "—"}
+                   </Table.Td>
+                   <Table.Td>
+                     <Text size="sm">{req.purpose || "—"}</Text>
+                   </Table.Td>
+                   <Table.Td>
+                     <Group gap="xs">
                       <Tooltip label="Approve">
                         <ActionIcon
                           color={APPROVE_ACTION_COLOR}
