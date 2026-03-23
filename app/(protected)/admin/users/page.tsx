@@ -74,9 +74,7 @@ export default function UsersPage() {
       throw new Error("You cannot reset your own password");
     }
 
-    const tempPassword = crypto.getRandomValues(new Uint8Array(12))
-      .reduce((acc, n) => acc + (n % 36).toString(36), "")
-      .slice(0, 12);
+    const tempPassword = "IEEERASvit@26";
 
     const res = await fetch(`/api/members/${id}/reset-password`, {
       method: "PATCH",

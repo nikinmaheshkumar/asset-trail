@@ -46,6 +46,7 @@ const actionLabels: Record<string, string> = {
   loan_approved: "Loan Approved",
   loan_rejected: "Loan Rejected",
   loan_closed: "Loan Closed",
+  loan_cancelled: "Loan Cancelled",
   member_created: "Member Created",
   role_changed: "Role Changed",
   item_updated: "Item Updated",

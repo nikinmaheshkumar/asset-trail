@@ -19,6 +19,7 @@ import {
   Card,
   Loader,
   ScrollArea,
+  Modal,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -31,11 +32,13 @@ import {
   IconCalendar,
   IconCalendarDue,
   IconHash,
+  IconX,
+  IconSettings,
 } from "@tabler/icons-react";
-import { SECONDARY_ACTION_COLOR } from "@/lib/ui";
+import { SECONDARY_ACTION_COLOR, REJECT_ACTION_COLOR } from "@/lib/ui";
 import { loanStatusColor, loanStatusLabel } from "@/lib/status";
 
-type LoanStatus = "REQUESTED" | "APPROVED" | "CLOSED" | "REJECTED";
+type LoanStatus = "REQUESTED" | "APPROVED" | "CLOSED" | "REJECTED" | "CANCELLED";
 
 type Loan = {
   id: number;
@@ -45,6 +48,9 @@ type Loan = {
   approved_at?: string;
   closed_at?: string;
   due_date?: string;
+  cancelled_at?: string | null;
+  rejected_at?: string | null;
+  rejection_note?: string | null;
   purpose: string;
   status: LoanStatus;
   item: { id: number; name: string; category: string };
@@ -58,6 +64,8 @@ export function MyLoansTable() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [cancelModal, setCancelModal] = useState<{ id: number } | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -77,6 +85,24 @@ export function MyLoansTable() {
   useEffect(() => {
     fetchLoans();
   }, []);
+
+  async function cancelRequest(id: number) {
+    setCancelLoading(true);
+    try {
+      const res = await fetch(`/api/loans/${id}/cancel`, { method: "PATCH" });
+      const data = await res.json();
+      if (!res.ok) {
+        notifications.show({ color: "red", title: "Error", message: data.error ?? "Cancel failed" });
+        return;
+      }
+      notifications.show({ color: SECONDARY_ACTION_COLOR, title: "Cancelled", message: "Request cancelled" });
+      fetchLoans();
+    } catch {
+      notifications.show({ color: "red", title: "Error", message: "Cancel failed" });
+    } finally {
+      setCancelLoading(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     return loans.filter((l) => {
@@ -160,6 +186,7 @@ export function MyLoansTable() {
               { value: "APPROVED", label: "Approved" },
               { value: "CLOSED", label: "Closed" },
               { value: "REJECTED", label: "Rejected" },
+              { value: "CANCELLED", label: "Cancelled" },
             ]}
             value={statusFilter}
             onChange={setStatusFilter}
@@ -194,6 +221,25 @@ export function MyLoansTable() {
                   Due: {new Date(loan.due_date).toLocaleDateString()}
                 </Text>
               )}
+
+              {loan.status === "REJECTED" && (
+                <Text size="xs" mt={4} c="red" lineClamp={3}>
+                  Rejection: {loan.rejection_note?.trim() || "No note provided"}
+                </Text>
+              )}
+
+              {loan.status === "REQUESTED" && (
+                <Button
+                  mt="sm"
+                  size="xs"
+                  variant="light"
+                  color={REJECT_ACTION_COLOR}
+                  leftSection={<IconX size={14} />}
+                  onClick={() => setCancelModal({ id: loan.id })}
+                >
+                  Cancel Request
+                </Button>
+              )}
             </Card>
           ))}
         </Stack>
@@ -220,6 +266,9 @@ export function MyLoansTable() {
                 </Table.Th>
                 <Table.Th>
                   <Group gap={6}><IconCalendarDue size={16} /><Text fw={800}>Due Date</Text></Group>
+                </Table.Th>
+                <Table.Th>
+                  <Group gap={6}><IconSettings size={16} /><Text fw={800}>Actions</Text></Group>
                 </Table.Th>
               </Table.Tr>
               </Table.Thead>
@@ -256,6 +305,25 @@ export function MyLoansTable() {
                         <Text>—</Text>
                       )}
                     </Table.Td>
+                    <Table.Td>
+                      {loan.status === "REQUESTED" ? (
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color={REJECT_ACTION_COLOR}
+                          leftSection={<IconX size={14} />}
+                          onClick={() => setCancelModal({ id: loan.id })}
+                        >
+                          Cancel
+                        </Button>
+                      ) : loan.status === "REJECTED" ? (
+                        <Text size="xs" c="red" lineClamp={2}>
+                          {loan.rejection_note?.trim() || "Rejected"}
+                        </Text>
+                      ) : (
+                        <Text size="xs">—</Text>
+                      )}
+                    </Table.Td>
                   </Table.Tr>
                 );
               })}
@@ -264,6 +332,39 @@ export function MyLoansTable() {
           </ScrollArea>
         </div>
       )}
+
+      {/* CANCEL REQUEST MODAL */}
+      <Modal
+        opened={cancelModal !== null}
+        onClose={() => {
+          if (cancelLoading) return;
+          setCancelModal(null);
+        }}
+        title={<Text fw={700} size="lg">Cancel Request</Text>}
+        centered
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm">Cancel this pending loan request?</Text>
+          <Group justify="flex-end">
+            <Button variant="default" disabled={cancelLoading} onClick={() => setCancelModal(null)}>
+              Keep
+            </Button>
+            <Button
+              color={REJECT_ACTION_COLOR}
+              variant="light"
+              loading={cancelLoading}
+              onClick={() => {
+                const id = cancelModal?.id;
+                if (!id) return;
+                cancelRequest(id).finally(() => setCancelModal(null));
+              }}
+            >
+              Cancel Request
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       {/* PAGINATION */}
       {totalPages > 1 && (

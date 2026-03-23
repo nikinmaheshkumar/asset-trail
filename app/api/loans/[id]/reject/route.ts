@@ -49,9 +49,26 @@ export async function PATCH(
       );
     }
 
+    const body = await req.json().catch(() => ({}));
+    const noteRaw = (body as { note?: unknown }).note;
+    const note = typeof noteRaw === "string" ? noteRaw.trim() : "";
+
+    // Required rejection note (keep short and actionable)
+    if (note.length < 5 || note.length > 300) {
+      return NextResponse.json(
+        { error: "Rejection note is required (5-300 characters)" },
+        { status: 400 },
+      );
+    }
+
     const updatedLoan = await prisma.loan.update({
       where: { id: loanId },
-      data: { status: "REJECTED" },
+      data: {
+        status: "REJECTED",
+        rejected_by: adminId,
+        rejected_at: new Date(),
+        rejection_note: note,
+      },
     });
 
     await prisma.activityLog.create({

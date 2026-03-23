@@ -22,6 +22,7 @@ import {
   ActionIcon,
   Tooltip,
   Modal,
+  Textarea,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -70,6 +71,9 @@ export function AdminRequestsTable() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<{ id: number; action: "approve" | "reject" } | null>(null);
 
+  const [rejectModal, setRejectModal] = useState<{ id: number } | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
+
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   async function fetchRequests() {
@@ -107,10 +111,14 @@ export function AdminRequestsTable() {
     }
   }
 
-  async function handleReject(id: number) {
+  async function handleReject(id: number, note: string) {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/loans/${id}/reject`, { method: "PATCH" });
+      const res = await fetch(`/api/loans/${id}/reject`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note }),
+      });
       const data = await res.json();
       if (!res.ok) {
         notifications.show({ color: "red", title: "Error", message: data.error ?? "Reject failed" });
@@ -130,8 +138,24 @@ export function AdminRequestsTable() {
     if (confirm.action === "approve") {
       await handleApprove(confirm.id);
     } else {
-      await handleReject(confirm.id);
+      setRejectModal({ id: confirm.id });
+      setRejectNote("");
     }
+  }
+
+  async function submitReject() {
+    if (!rejectModal) return;
+    const note = rejectNote.trim();
+    if (note.length < 5 || note.length > 300) {
+      notifications.show({
+        color: "red",
+        title: "Validation",
+        message: "Rejection note is required (5-300 characters)",
+      });
+      return;
+    }
+
+    await handleReject(rejectModal.id, note);
   }
 
   const filtered = useMemo(() => {
@@ -381,6 +405,59 @@ export function AdminRequestsTable() {
             >
               {confirm?.action === "approve" ? "Approve" : "Reject"}
             </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* REJECT NOTE MODAL */}
+      <Modal
+        opened={rejectModal !== null}
+        onClose={() => {
+          if (actionLoading !== null) return;
+          setRejectModal(null);
+          setRejectNote("");
+        }}
+        title={<Text fw={700} size="lg">Rejection Note</Text>}
+        centered
+        size="md"
+      >
+        <Stack gap="md">
+          <Text size="sm">Please provide a short reason for rejection (required).</Text>
+          <Textarea
+            label="Note"
+            placeholder="e.g. Item needed for another approved request"
+            value={rejectNote}
+            onChange={(e) => setRejectNote(e.currentTarget.value)}
+            required
+            autosize
+            minRows={3}
+          />
+          <Group justify="space-between">
+            <Text size="xs" c="dimmed">{rejectNote.trim().length}/300</Text>
+            <Group gap="xs">
+              <Button
+                variant="default"
+                onClick={() => {
+                  if (actionLoading !== null) return;
+                  setRejectModal(null);
+                  setRejectNote("");
+                }}
+                disabled={actionLoading !== null}
+              >
+                Cancel
+              </Button>
+              <Button
+                color={REJECT_ACTION_COLOR}
+                variant="light"
+                loading={actionLoading !== null}
+                onClick={() => submitReject().finally(() => {
+                  setRejectModal(null);
+                  setRejectNote("");
+                })}
+              >
+                Reject
+              </Button>
+            </Group>
           </Group>
         </Stack>
       </Modal>
