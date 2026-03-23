@@ -39,6 +39,7 @@ export const LOAN_STATUS_LABELS: AnyRecord = {
   APPROVED: "Approved",
   CLOSED: "Closed",
   REJECTED: "Rejected",
+  CANCELLED: "Cancelled",
 };
 
 export const LOAN_STATUS_COLORS: AnyRecord = {
@@ -46,6 +47,7 @@ export const LOAN_STATUS_COLORS: AnyRecord = {
   APPROVED: "steel",
   CLOSED: "green",
   REJECTED: "red",
+  CANCELLED: "ink",
 };
 
 export function loanStatusLabel(status: unknown) {

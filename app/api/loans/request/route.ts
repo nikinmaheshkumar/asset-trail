@@ -18,9 +18,29 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { item_id, purpose, notes, due_date, quantity } = body;
 
-    if (!item_id || !purpose) {
+    if (!item_id || !purpose || !due_date) {
       return NextResponse.json(
-        { error: "item_id and purpose are required" },
+        { error: "item_id, purpose, and due_date are required" },
+        { status: 400 },
+      );
+    }
+
+    const parsedDue = new Date(String(due_date));
+    if (Number.isNaN(parsedDue.getTime())) {
+      return NextResponse.json(
+        { error: "due_date must be a valid date" },
+        { status: 400 },
+      );
+    }
+
+    // Compare by day (local) to allow any time today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDay = new Date(parsedDue);
+    dueDay.setHours(0, 0, 0, 0);
+    if (dueDay < today) {
+      return NextResponse.json(
+        { error: "due_date must be today or a future date" },
         { status: 400 },
       );
     }
@@ -33,9 +53,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const purposeText = notes
-      ? `${purpose}\n\nNotes: ${notes}`
-      : purpose;
+    const purposeTrimmed = String(purpose).trim();
+    if (!purposeTrimmed) {
+      return NextResponse.json(
+        { error: "purpose is required" },
+        { status: 400 },
+      );
+    }
+    const notesTrimmed = notes == null ? "" : String(notes).trim();
+    const purposeText = notesTrimmed
+      ? `${purposeTrimmed}\n\nNotes: ${notesTrimmed}`
+      : purposeTrimmed;
 
     // Run all validation checks in parallel for better performance
     const [item, duplicate, overdueForItem] = await Promise.all([
@@ -111,13 +139,14 @@ export async function POST(req: Request) {
         quantity: qty,
         purpose: purposeText,
         status: "REQUESTED",
-        ...(due_date ? { due_date: new Date(due_date) } : {}),
+        due_date: parsedDue,
       },
       select: {
         id: true,
         item_id: true,
         member_id: true,
         requested_at: true,
+        due_date: true,
         purpose: true,
         status: true,
       },

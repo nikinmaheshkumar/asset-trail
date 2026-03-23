@@ -176,6 +176,7 @@ export function EditItemModal({ opened, onClose, item, onUpdated }: Props) {
             { value: "WORKING", label: "Working" },
             { value: "NEEDS_TESTING", label: "Needs Testing" },
             { value: "FAULTY", label: "Faulty" },
+            { value: "SCRAP", label: "Scrap" },
           ]}
         />
 

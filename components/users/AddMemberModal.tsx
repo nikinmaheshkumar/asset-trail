@@ -21,11 +21,11 @@ type Props = {
 };
 
 export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
-  const DEFAULT_PASSWORD = "IEEERASvit@26";
+  const TEMP_PASSWORD = "IEEERASvit@26";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(DEFAULT_PASSWORD);
+  const [password] = useState(TEMP_PASSWORD);
   const [role, setRole] = useState<string | null>("JUNIOR_CORE");
   const [loading, setLoading] = useState(false);
 
@@ -71,7 +71,6 @@ export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
       // Reset form
       setName("");
       setEmail("");
-      setPassword(DEFAULT_PASSWORD);
       setRole("JUNIOR_CORE");
     } catch {
       notifications.show({
@@ -124,7 +123,7 @@ export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
         />
 
         <Text size="xs">
-          Default password. User must change it on first login.
+          Temporary password. User must change it on first login.
         </Text>
 
         <Select

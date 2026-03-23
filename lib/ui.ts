@@ -48,6 +48,7 @@ export const ACTIVITY_ACTION_COLORS: AnyRecord = {
   loan_approved: "green",
   loan_rejected: "red",
   loan_closed: "steel",
+  loan_cancelled: "ink",
   member_created: "steel",
   role_changed: "steel",
   item_updated: "steel",
