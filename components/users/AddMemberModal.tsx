@@ -110,12 +110,12 @@ export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
           rightSection={
             <CopyButton value={password}>
               {({ copied, copy }) => (
-                <ActionIcon
-                  size="sm"
-                  color={copied ? "teal" : "gray"}
-                  variant="subtle"
-                  onClick={copy}
-                >
+                  <ActionIcon
+                    size="sm"
+                    color={copied ? "teal" : "brand"}
+                    variant="subtle"
+                    onClick={copy}
+                  >
                   <IconCopy size={16} />
                 </ActionIcon>
               )}
@@ -123,7 +123,7 @@ export function AddMemberModal({ opened, onClose, onSuccess }: Props) {
           }
         />
 
-        <Text size="xs" c="dimmed">
+        <Text size="xs">
           Default password. User must change it on first login.
         </Text>
 

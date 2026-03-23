@@ -18,8 +18,12 @@ import {
   IconClipboardList,
   IconLogout,
   IconUser,
+  IconFileText,
+  IconHistory,
+  IconClockCheck,
 } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
+import { roleColor, roleLabel, PRIMARY_CTA_COLOR } from "@/lib/ui";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -41,10 +45,28 @@ export function Sidebar() {
       roles: ["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"],
     },
     {
-      label: "Loans",
-      href: "/loans",
+      label: "My Loans",
+      href: "/my-loans",
       icon: IconClipboardList,
       roles: ["MASTER_ADMIN", "BOARD", "SENIOR_CORE", "JUNIOR_CORE"],
+    },
+    {
+      label: "Loan Requests",
+      href: "/admin/requests",
+      icon: IconFileText,
+      roles: ["MASTER_ADMIN", "BOARD"],
+    },
+    {
+      label: "Active Loans",
+      href: "/admin/loans",
+      icon: IconClockCheck,
+      roles: ["MASTER_ADMIN", "BOARD"],
+    },
+    {
+      label: "Activity Log",
+      href: "/admin/activity",
+      icon: IconHistory,
+      roles: ["MASTER_ADMIN"],
     },
     {
       label: "Users",
@@ -57,20 +79,6 @@ export function Sidebar() {
   const visibleNavItems = navItems.filter((item) =>
     userRole ? item.roles.includes(userRole) : false
   );
-
-  const roleLabels: Record<string, string> = {
-    MASTER_ADMIN: "Master Admin",
-    BOARD: "Board",
-    SENIOR_CORE: "Senior Core",
-    JUNIOR_CORE: "Junior Core",
-  };
-
-  const roleColors: Record<string, string> = {
-    MASTER_ADMIN: "red",
-    BOARD: "blue",
-    SENIOR_CORE: "yellow.7",
-    JUNIOR_CORE: "gray",
-  };
 
   return (
     <Stack justify="space-between" h="100%" pt="sm">
@@ -91,18 +99,21 @@ export function Sidebar() {
                 py="xs"
                 style={{
                   borderRadius: 8,
+                  borderLeft: isActive
+                    ? "3px solid var(--app-accent)"
+                    : "3px solid transparent",
                   backgroundColor: isActive
-                    ? "rgba(255,255,255,0.08)"
+                    ? "color-mix(in srgb, var(--app-accent) 18%, rgba(255,255,255,0.08))"
                     : "transparent",
                   cursor: "pointer",
                 }}
               >
                 <Group gap="sm">
-                  <Icon size={18} color={isActive ? "white" : "#9CA3AF"} />
+                  <Icon size={18} color="white" />
                   <Text
                     size="md"
-                    fw={isActive ? 600 : 400}
-                    c={isActive ? "white" : "gray.4"}
+                    fw={isActive ? 700 : 600}
+                    c="white"
                   >
                     {item.label}
                   </Text>
@@ -115,7 +126,7 @@ export function Sidebar() {
 
       {/* User Section */}
       <Stack gap="md">
-        <Divider color="dark.4" />
+        <Divider color="rgba(255,255,255,0.12)" />
 
         <Box
           px="md"
@@ -127,7 +138,7 @@ export function Sidebar() {
           }}
         >
           <Stack align="center" gap="xs">
-            <Avatar size={42} radius="xl" color="blue">
+            <Avatar size={42} radius="xl" color={PRIMARY_CTA_COLOR}>
               {session?.user?.name?.[0]?.toUpperCase() ?? "U"}
             </Avatar>
 
@@ -136,7 +147,7 @@ export function Sidebar() {
                 {session?.user?.name ?? "Unknown"}
               </Text>
 
-              <Text size="xs" c="gray.4">
+              <Text size="xs" c="white">
                 {session?.user?.email}
               </Text>
             </Stack>
@@ -145,10 +156,10 @@ export function Sidebar() {
               <Badge
                 size="sm"
                 variant="light"
-                color={roleColors[session.user.role]}
+                color={roleColor(session.user.role)}
                 mt={4}
               >
-                {roleLabels[session.user.role]}
+                {roleLabel(session.user.role)}
               </Badge>
             )}
           </Stack>

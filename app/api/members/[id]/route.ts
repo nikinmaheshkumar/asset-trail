@@ -118,6 +118,16 @@ export async function PATCH(
       },
     });
 
+    if (role && role !== existingMember.role) {
+      await prisma.activityLog.create({
+        data: {
+          action: "role_changed",
+          actor_id: auth.session.user.id,
+          target_id: memberId,
+        },
+      });
+    }
+
     return NextResponse.json(updatedMember);
 
   } catch (error) {
